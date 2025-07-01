@@ -170,3 +170,7 @@ dist
 
 .dev.vars
 .wrangler/
+
+# Client
+.clinerules/
+memory-bank/
