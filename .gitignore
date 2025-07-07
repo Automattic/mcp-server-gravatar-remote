@@ -1,3 +1,9 @@
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon[]
+
 # Logs
 
 logs
