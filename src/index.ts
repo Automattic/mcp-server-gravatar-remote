@@ -1,75 +1,207 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { getServerInfo } from "./config/server-config.js";
 
-// Define our MCP agent with tools
-export class MyMCP extends McpAgent {
-	server = new McpServer({
-		name: "Authless Calculator",
-		version: "1.0.0",
-	});
+// Define the MCP agent with Gravatar tools
+export class GravatarMcpServer extends McpAgent {
+	server = new McpServer(getServerInfo());
 
 	async init() {
-		// Simple addition tool
+		// Import utilities
+		const { generateIdentifier } = await import("./common/utils.js");
+		const { getProfile } = await import("./tools/profile-utils.js");
+		const { getInferredInterests } = await import("./tools/experimental-utils.js");
+		const { fetchAvatar, avatarParams } = await import("./tools/avatar-utils.js");
+
+		// Register get_profile_by_email tool
 		this.server.tool(
-			"add",
-			{ a: z.number(), b: z.number() },
-			async ({ a, b }) => ({
-				content: [{ type: "text", text: String(a + b) }],
-			})
+			"get_profile_by_email",
+			{ email: z.string().email() },
+			async ({ email }) => {
+				try {
+					const identifier = await generateIdentifier(email);
+					const profile = await getProfile(identifier);
+					return {
+						content: [{ type: 'text', text: JSON.stringify(profile, null, 2) }],
+						structuredContent: { profile }
+					}
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get profile for email "${email}": ${errorMessage}` 
+						}],
+						isError: true
+					};
+				}
+			}
 		);
 
-		// Calculator tool with multiple operations
+		// Register get_profile_by_id tool
 		this.server.tool(
-			"calculate",
-			{
-				operation: z.enum(["add", "subtract", "multiply", "divide"]),
-				a: z.number(),
-				b: z.number(),
-			},
-			async ({ operation, a, b }) => {
-				let result: number;
-				switch (operation) {
-					case "add":
-						result = a + b;
-						break;
-					case "subtract":
-						result = a - b;
-						break;
-					case "multiply":
-						result = a * b;
-						break;
-					case "divide":
-						if (b === 0)
-							return {
-								content: [
-									{
-										type: "text",
-										text: "Error: Cannot divide by zero",
-									},
-								],
-							};
-						result = a / b;
-						break;
+			"get_profile_by_id",
+			{ profileIdentifier: z.string().min(1) },
+			async ({ profileIdentifier }) => {
+				try {
+					const profile = await getProfile(profileIdentifier);
+					return {
+						content: [{ type: 'text', text: JSON.stringify(profile, null, 2) }],
+						structuredContent: { profile }
+					};
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get profile for ID "${profileIdentifier}": ${errorMessage}` 
+						}],
+						isError: true
+					};
 				}
-				return { content: [{ type: "text", text: String(result) }] };
+			}
+		);
+
+		// Register get_inferred_interests_by_email tool
+		this.server.tool(
+			"get_inferred_interests_by_email",
+			{ email: z.string().email() },
+			async ({ email }) => {
+				try {
+					const identifier = await generateIdentifier(email);
+					const interests = await getInferredInterests(identifier);
+					
+					return {
+						content: [{ 
+							type: "text", 
+							text: JSON.stringify(interests, null, 2) 
+						}],
+						structuredContent: { interests }
+					};
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get interests for email "${email}": ${errorMessage}` 
+						}],
+						isError: true
+					};
+				}
+			}
+		);
+
+		// Register get_inferred_interests_by_id tool
+		this.server.tool(
+			"get_inferred_interests_by_id",
+			{ profileIdentifier: z.string().min(1) },
+			async ({ profileIdentifier }) => {
+				try {
+					const interests = await getInferredInterests(profileIdentifier);
+					
+					return {
+						content: [{ 
+							type: "text", 
+							text: JSON.stringify(interests, null, 2) 
+						}],
+						structuredContent: { interests }
+					};
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get interests for ID "${profileIdentifier}": ${errorMessage}` 
+						}],
+						isError: true
+					};
+				}
+			}
+		);
+
+		// Register get_avatar_by_email tool
+		this.server.tool(
+			"get_avatar_by_email",
+			{ 
+				email: z.string().email(),
+				size: z.number().min(1).max(2048).optional(),
+				defaultOption: z.enum(['404', 'mp', 'identicon', 'monsterid', 'wavatar', 'retro', 'robohash', 'blank']).optional(),
+				forceDefault: z.boolean().optional(),
+				rating: z.enum(['G', 'PG', 'R', 'X', 'g', 'pg', 'r', 'x']).optional()
+			},
+			async ({ email, size, defaultOption, forceDefault, rating }) => {
+				try {
+					const identifier = await generateIdentifier(email);
+					
+					const avatarResult = await fetchAvatar(avatarParams(
+						identifier,
+						size,
+						defaultOption,
+						forceDefault,
+						rating
+					));
+					
+					return {
+						content: [{
+							type: "image",
+							data: avatarResult.buffer.toString('base64'),
+							mimeType: avatarResult.mimeType
+						}]
+					};
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get avatar for email "${email}": ${errorMessage}` 
+						}],
+						isError: true
+					};
+				}
+			}
+		);
+
+		// Register get_avatar_by_id tool
+		this.server.tool(
+			"get_avatar_by_id",
+			{ 
+				avatarIdentifier: z.string().min(1),
+				size: z.number().min(1).max(2048).optional(),
+				defaultOption: z.enum(['404', 'mp', 'identicon', 'monsterid', 'wavatar', 'retro', 'robohash', 'blank']).optional(),
+				forceDefault: z.boolean().optional(),
+				rating: z.enum(['G', 'PG', 'R', 'X', 'g', 'pg', 'r', 'x']).optional()
+			},
+			async ({ avatarIdentifier, size, defaultOption, forceDefault, rating }) => {
+				try {
+					const avatarResult = await fetchAvatar(avatarParams(
+						avatarIdentifier,
+						size,
+						defaultOption,
+						forceDefault,
+						rating
+					));
+					
+					return {
+						content: [{
+							type: "image",
+							data: avatarResult.buffer.toString('base64'),
+							mimeType: avatarResult.mimeType
+						}]
+					};
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : String(error);
+					return {
+						content: [{ 
+							type: "text", 
+							text: `Failed to get avatar for ID "${avatarIdentifier}": ${errorMessage}` 
+						}],
+						isError: true
+					};
+				}
 			}
 		);
 	}
 }
 
-export default {
-	fetch(request: Request, env: Env, ctx: ExecutionContext) {
-		const url = new URL(request.url);
-
-		if (url.pathname === "/sse" || url.pathname === "/sse/message") {
-			return MyMCP.serveSSE("/sse").fetch(request, env, ctx);
-		}
-
-		if (url.pathname === "/mcp") {
-			return MyMCP.serve("/mcp").fetch(request, env, ctx);
-		}
-
-		return new Response("Not found", { status: 404 });
-	},
-};
+export default GravatarMcpServer.mount("/mcp");

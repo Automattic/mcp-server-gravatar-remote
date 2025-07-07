@@ -13,7 +13,7 @@
 	"migrations": [
 		{
 			"new_sqlite_classes": [
-				"MyMCP"
+				"GravatarMcpServer"
 			],
 			"tag": "v1"
 		}
@@ -21,7 +21,7 @@
 	"durable_objects": {
 		"bindings": [
 			{
-				"class_name": "MyMCP",
+				"class_name": "GravatarMcpServer",
 				"name": "MCP_OBJECT"
 			}
 		]
