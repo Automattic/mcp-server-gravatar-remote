@@ -4,7 +4,7 @@
 
 // Custom error types
 export class EmptyStringError extends Error {
-  constructor(message: string = "String parameter is empty") {
+  constructor(message = "String parameter is empty") {
     super(message);
     this.name = "EmptyStringError";
   }

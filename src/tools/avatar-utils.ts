@@ -26,7 +26,7 @@ function detectMimeType(response: Response): string {
   const contentType = response.headers.get('content-type');
 
   // Validate it's an image MIME type
-  if (contentType && contentType.startsWith('image/')) {
+  if (contentType?.startsWith('image/')) {
     return contentType;
   }
 
@@ -87,7 +87,7 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
         message = `Avatar access denied for identifier: ${params.avatarIdentifier}`;
         break;
       case 429:
-        message = `Rate limit exceeded. Please try again later.`;
+        message = "Rate limit exceeded. Please try again later.";
         break;
       default:
         message = `Failed to fetch avatar (${response.status}): ${response.statusText}`;
