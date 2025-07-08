@@ -2,6 +2,8 @@ import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getServerInfo } from "./config/server-config.js";
+import { profileOutputSchema } from "./generated/schemas/profile-output-schema.js";
+import { interestsOutputSchema } from "./generated/schemas/interests-output-schema.js";
 
 // Define the MCP agent with Gravatar tools
 export class GravatarMcpServer extends McpAgent {
@@ -15,38 +17,48 @@ export class GravatarMcpServer extends McpAgent {
     const { fetchAvatar, avatarParams } = await import("./tools/avatar-utils.js");
 
     // Register get_profile_by_email tool
-    this.server.tool("get_profile_by_email", { email: z.string().email() }, async ({ email }) => {
-      try {
-        const identifier = await generateIdentifier(email);
-        const profile = await getProfile(identifier);
-        return {
-          content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
-          structuredContent: { profile },
-        };
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Failed to get profile for email "${email}": ${errorMessage}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    });
+    this.server.registerTool(
+      "get_profile_by_email",
+      {
+        inputSchema: { email: z.string().email() },
+        outputSchema: profileOutputSchema.shape,
+      },
+      async ({ email }) => {
+        try {
+          const identifier = await generateIdentifier(email);
+          const profile = await getProfile(identifier);
+          return {
+            content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
+            structuredContent: { ...profile },
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Failed to get profile for email "${email}": ${errorMessage}`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      },
+    );
 
     // Register get_profile_by_id tool
-    this.server.tool(
+    this.server.registerTool(
       "get_profile_by_id",
-      { profileIdentifier: z.string().min(1) },
+      {
+        inputSchema: { profileIdentifier: z.string().min(1) },
+        outputSchema: profileOutputSchema.shape,
+      },
       async ({ profileIdentifier }) => {
         try {
           const profile = await getProfile(profileIdentifier);
           return {
             content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
-            structuredContent: { profile },
+            structuredContent: { ...profile },
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -64,9 +76,12 @@ export class GravatarMcpServer extends McpAgent {
     );
 
     // Register get_inferred_interests_by_email tool
-    this.server.tool(
+    this.server.registerTool(
       "get_inferred_interests_by_email",
-      { email: z.string().email() },
+      {
+        inputSchema: { email: z.string().email() },
+        outputSchema: interestsOutputSchema.shape,
+      },
       async ({ email }) => {
         try {
           const identifier = await generateIdentifier(email);
@@ -79,7 +94,7 @@ export class GravatarMcpServer extends McpAgent {
                 text: JSON.stringify(interests, null, 2),
               },
             ],
-            structuredContent: { interests },
+            structuredContent: { inferredInterests: interests },
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -97,9 +112,12 @@ export class GravatarMcpServer extends McpAgent {
     );
 
     // Register get_inferred_interests_by_id tool
-    this.server.tool(
+    this.server.registerTool(
       "get_inferred_interests_by_id",
-      { profileIdentifier: z.string().min(1) },
+      {
+        inputSchema: { profileIdentifier: z.string().min(1) },
+        outputSchema: interestsOutputSchema.shape,
+      },
       async ({ profileIdentifier }) => {
         try {
           const interests = await getInferredInterests(profileIdentifier);
@@ -111,7 +129,7 @@ export class GravatarMcpServer extends McpAgent {
                 text: JSON.stringify(interests, null, 2),
               },
             ],
-            structuredContent: { interests },
+            structuredContent: { inferredInterests: interests },
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
