@@ -5,9 +5,9 @@
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
-		"format": "biome format --write --config-path=./biome.json",
-		"lint": "biome lint --config-path=./biome.json",
-		"lint:fix": "biome lint --fix --config-path=./biome.json",
+		"format": "biome format --write",
+		"lint": "biome lint",
+		"lint:fix": "biome lint --fix",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types",
 		"type-check": "tsc --noEmit"
