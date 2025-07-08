@@ -41,18 +41,18 @@ export function normalize(input: string): string {
  */
 export async function generateIdentifier(input: string): Promise<string> {
   const normalizedInput = normalize(input);
-  
+
   // Use Web Crypto API instead of Node.js crypto
   const encoder = new TextEncoder();
   const data = encoder.encode(normalizedInput);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = new Uint8Array(hashBuffer);
-  
+
   // Convert to hex string
   const hashHex = Array.from(hashArray)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-    
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
   return hashHex;
 }
 

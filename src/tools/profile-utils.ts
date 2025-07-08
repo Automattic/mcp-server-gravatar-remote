@@ -3,9 +3,9 @@
  * Uses the generated Gravatar API client
  */
 
-import { ProfilesApi, Configuration } from '../generated/gravatar-api/index.js';
-import { getApiHeaders } from '../config/server-config.js';
-import { mapHttpError } from '../common/utils.js';
+import { ProfilesApi, Configuration } from "../generated/gravatar-api/index.js";
+import { getApiHeaders } from "../config/server-config.js";
+import { mapHttpError } from "../common/utils.js";
 
 /**
  * Create a configured ProfilesApi instance
@@ -16,7 +16,7 @@ export function createProfilesApi(): ProfilesApi {
     fetchApi: fetch,
     headers: getApiHeaders(),
   });
-  
+
   return new ProfilesApi(configuration);
 }
 
@@ -27,7 +27,7 @@ export function createProfilesApi(): ProfilesApi {
  */
 export async function getProfile(identifier: string) {
   const api = createProfilesApi();
-  
+
   try {
     const response = await api.getProfileById({ profileIdentifier: identifier });
     return response;
@@ -37,7 +37,7 @@ export async function getProfile(identifier: string) {
       const { status, statusText } = error.response;
       throw new Error(mapHttpError(status, statusText, identifier));
     }
-    
+
     // Handle network or other errors
     throw new Error(`Network error while fetching profile: ${error.message}`);
   }

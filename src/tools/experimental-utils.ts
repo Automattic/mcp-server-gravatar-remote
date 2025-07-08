@@ -3,9 +3,9 @@
  * Uses the generated Gravatar API client
  */
 
-import { ExperimentalApi, Configuration } from '../generated/gravatar-api/index.js';
-import { getApiHeaders } from '../config/server-config.js';
-import { mapHttpError } from '../common/utils.js';
+import { ExperimentalApi, Configuration } from "../generated/gravatar-api/index.js";
+import { getApiHeaders } from "../config/server-config.js";
+import { mapHttpError } from "../common/utils.js";
 
 /**
  * Create a configured ExperimentalApi instance
@@ -16,7 +16,7 @@ export function createExperimentalApi(): ExperimentalApi {
     fetchApi: fetch,
     headers: getApiHeaders(),
   });
-  
+
   return new ExperimentalApi(configuration);
 }
 
@@ -27,9 +27,11 @@ export function createExperimentalApi(): ExperimentalApi {
  */
 export async function getInferredInterests(identifier: string) {
   const api = createExperimentalApi();
-  
+
   try {
-    const response = await api.getProfileInferredInterestsById({ profileIdentifier: identifier });
+    const response = await api.getProfileInferredInterestsById({
+      profileIdentifier: identifier,
+    });
     return response;
   } catch (error: any) {
     // Handle HTTP errors with meaningful messages
@@ -37,7 +39,7 @@ export async function getInferredInterests(identifier: string) {
       const { status, statusText } = error.response;
       throw new Error(mapHttpError(status, statusText, identifier));
     }
-    
+
     // Handle network or other errors
     throw new Error(`Network error while fetching interests: ${error.message}`);
   }

@@ -4,7 +4,7 @@
  * Following STDIO implementation pattern
  */
 
-import { config } from '../config/server-config.js';
+import { config } from "../config/server-config.js";
 
 export interface AvatarParams {
   avatarIdentifier: string;
@@ -23,15 +23,15 @@ export interface AvatarResult {
  * Detect MIME type from HTTP response headers
  */
 function detectMimeType(response: Response): string {
-  const contentType = response.headers.get('content-type');
+  const contentType = response.headers.get("content-type");
 
   // Validate it's an image MIME type
-  if (contentType?.startsWith('image/')) {
+  if (contentType?.startsWith("image/")) {
     return contentType;
   }
 
   // Fallback to PNG for safety, since Gravatar defaults to returning PNG images
-  return 'image/png';
+  return "image/png";
 }
 
 /**
@@ -44,19 +44,19 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   const queryParams = new URLSearchParams();
 
   if (params.size) {
-    queryParams.append('s', params.size.toString());
+    queryParams.append("s", params.size.toString());
   }
 
   if (params.defaultOption) {
-    queryParams.append('d', params.defaultOption);
+    queryParams.append("d", params.defaultOption);
   }
 
   if (params.forceDefault) {
-    queryParams.append('f', 'y');
+    queryParams.append("f", "y");
   }
 
   if (params.rating) {
-    queryParams.append('r', params.rating);
+    queryParams.append("r", params.rating);
   }
 
   // Add query string to URL if there are any parameters
@@ -68,7 +68,7 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   // Fetch the image
   const response = await fetch(url, {
     headers: {
-      'User-Agent': config.userAgent,
+      "User-Agent": config.userAgent,
     },
     signal: AbortSignal.timeout(config.requestTimeout),
   });
@@ -123,14 +123,14 @@ export function avatarParams(
   size?: number,
   defaultOption?: string,
   forceDefault?: boolean,
-  rating?: string
+  rating?: string,
 ): AvatarParams {
   return {
     avatarIdentifier,
     ...(size !== undefined && { size }),
     ...(defaultOption !== undefined && { defaultOption }),
     ...(forceDefault !== undefined && { forceDefault }),
-    ...(rating !== undefined && { rating })
+    ...(rating !== undefined && { rating }),
   };
 }
 

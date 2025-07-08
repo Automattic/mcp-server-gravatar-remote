@@ -3,7 +3,7 @@
  * Adapted for Cloudflare Workers environment
  */
 
-import { VERSION } from '../common/version.js';
+import { VERSION } from "../common/version.js";
 
 /**
  * Server configuration object
@@ -11,11 +11,11 @@ import { VERSION } from '../common/version.js';
  */
 export const config = {
   // Gravatar API endpoint
-  avatarApiBase: 'https://gravatar.com/avatar',
-  
+  avatarApiBase: "https://gravatar.com/avatar",
+
   // User agent for API requests
   userAgent: `Remote-Gravatar-MCP-Server/${VERSION}`,
-  
+
   // Request timeout (in milliseconds)
   requestTimeout: 30000,
 };
@@ -25,7 +25,7 @@ export const config = {
  */
 export function getServerInfo() {
   return {
-    name: 'Gravatar MCP Server',
+    name: "Gravatar MCP Server",
     version: VERSION,
   };
 }
@@ -36,8 +36,8 @@ export function getServerInfo() {
  */
 export function getApiHeaders(): Record<string, string> {
   return {
-    'User-Agent': config.userAgent,
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
+    "User-Agent": config.userAgent,
+    Accept: "application/json",
+    "Content-Type": "application/json",
   };
 }
