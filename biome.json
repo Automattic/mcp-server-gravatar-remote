@@ -55,7 +55,7 @@
       }
     }
   },
-  "root": false,
+  "root": true,
   "vcs": {
     "clientKind": "git",
     "enabled": true,
