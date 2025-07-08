@@ -5,6 +5,7 @@
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
+		"extract-schemas": "tsx scripts/extract-schemas.ts",
 		"format": "biome format --write",
 		"lint": "biome lint",
 		"lint:fix": "biome lint --fix",
