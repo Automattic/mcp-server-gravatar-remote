@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "inferredInterests": {
+      "type": "array",
+      "description": "A list of AI-inferred interests",
+      "items": {
+        "type": "object",
+        "description": "An interest the user has added to their profile.",
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The unique identifier for the interest.",
+            "examples": [
+              1
+            ]
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the interest as originally defined (most often in English).",
+            "examples": [
+              "photography"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "inferredInterests"
+  ]
+}
