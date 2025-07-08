@@ -20,8 +20,16 @@ export class GravatarMcpServer extends McpAgent {
     this.server.registerTool(
       "get_profile_by_email",
       {
+        title: "Get Gravatar Profile by Email",
+        description:
+          "Retrieve comprehensive Gravatar profile information using an email address. Returns detailed profile data including personal information, social accounts, and avatar details. <examples>'Show me the Gravatar profile for john.doe@example.com' or 'Get profile info for user@company.com.'</examples>",
         inputSchema: { email: z.string().email() },
         outputSchema: profileOutputSchema.shape,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: true,
+        },
       },
       async ({ email }) => {
         try {
@@ -50,8 +58,16 @@ export class GravatarMcpServer extends McpAgent {
     this.server.registerTool(
       "get_profile_by_id",
       {
+        title: "Get Gravatar Profile by ID",
+        description:
+          "Retrieve comprehensive Gravatar profile information using a profile identifier. Returns detailed profile data including personal information, social accounts, and avatar details. <examples>'Get the profile for Gravatar user with ID abc123...' or 'Show me the profile for username johndoe.'</examples>",
         inputSchema: { profileIdentifier: z.string().min(1) },
         outputSchema: profileOutputSchema.shape,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: true,
+        },
       },
       async ({ profileIdentifier }) => {
         try {
@@ -79,8 +95,16 @@ export class GravatarMcpServer extends McpAgent {
     this.server.registerTool(
       "get_inferred_interests_by_email",
       {
+        title: "Get Inferred Interests by Email",
+        description:
+          "Retrieve AI-inferred interests for a Gravatar profile using an email address. Returns experimental machine learning-generated interest data based on public profile information. <hint>When searching for interests, prefer to look up the interests in the Gravatar profile over the inferred interests, since they are specified explicitly by the owner of the Gravatar profile.</hint> <examples>'Get the inferred interests for user@example.com' or 'Show me inferred interests for john.doe@company.com.'</examples>",
         inputSchema: { email: z.string().email() },
         outputSchema: interestsOutputSchema.shape,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: false,
+        },
       },
       async ({ email }) => {
         try {
@@ -115,8 +139,16 @@ export class GravatarMcpServer extends McpAgent {
     this.server.registerTool(
       "get_inferred_interests_by_id",
       {
+        title: "Get Inferred Interests by ID",
+        description:
+          "Retrieve AI-inferred interests for a Gravatar profile using a profile identifier. Returns experimental machine learning-generated interest data based on public profile information. <hint>When searching for interests, prefer to look up the interests in the Gravatar profile over the inferred interests, since they are specified explicitly by the owner of the Gravatar profile.</hint> <examples>'Get the inferred interests for user ID abc123...' or 'Show me inferred interests for username johndoe.'</examples>",
         inputSchema: { profileIdentifier: z.string().min(1) },
         outputSchema: interestsOutputSchema.shape,
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: false,
+        },
       },
       async ({ profileIdentifier }) => {
         try {
