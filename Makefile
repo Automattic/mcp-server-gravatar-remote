@@ -22,14 +22,10 @@ generate-client:
 	npx @openapitools/openapi-generator-cli generate
 	@echo "TypeScript client generated in src/generated/gravatar-api/"
 
-# Extract MCP schemas from generated types (to be implemented)
-generate-schemas:
+# Extract MCP schemas from OpenAPI specification
+generate-schemas: download-spec
 	@echo "Extracting MCP schemas..."
-	@if [ -f scripts/extract-schemas.ts ]; then \
-		npx tsx scripts/extract-schemas.ts; \
-	else \
-		echo "Schema extraction script not yet implemented"; \
-	fi
+	npm run extract-schemas
 
 # Run the full generation pipeline
 generate-all: download-spec generate-client generate-schemas
