@@ -4,11 +4,11 @@ import path from "node:path";
 import configData from "./schemas.config.json" with { type: "json" };
 
 /**
- * Extract MCP output schemas from OpenAPI specification
+ * Extract MCP input and output schemas from OpenAPI specification
  * This script generates TypeScript files with Zod schemas for use in MCP tool definitions
  */
 
-interface SchemaConfig {
+interface OutputSchemaConfig {
   modelName: string; // OpenAPI schema name (e.g., "Profile", "Interest")
   outputFileName: string; // Output file name (e.g., "profile-output-schema")
   wrapInArray?: {
@@ -16,6 +16,14 @@ interface SchemaConfig {
     propertyName: string; // Property name for the array (e.g., "interests")
     description?: string; // Description for the array property
   };
+}
+
+interface InputSchemaConfig {
+  operationId?: string; // OpenAPI operation ID to extract parameters from
+  parameterType?: string; // Custom parameter type (e.g., "email")
+  outputFileName: string; // Output file name (e.g., "profile-input-schema")
+  description: string; // Description for the input schema
+  customSchema?: Record<string, JsonSchema>; // Custom schema definition
 }
 
 interface JsonSchema {
@@ -27,6 +35,10 @@ interface JsonSchema {
   enum?: string[];
   format?: string;
   nullable?: boolean;
+  minimum?: number;
+  maximum?: number;
+  minLength?: number;
+  maxLength?: number;
   [key: string]: unknown; // Allow additional JSON Schema properties
 }
 
@@ -37,6 +49,21 @@ interface OpenApiSpec {
   components: {
     schemas: Record<string, JsonSchema>;
   };
+  paths: Record<
+    string,
+    {
+      get?: {
+        operationId?: string;
+        parameters?: Array<{
+          name: string;
+          in: string;
+          required?: boolean;
+          description?: string;
+          schema: JsonSchema;
+        }>;
+      };
+    }
+  >;
 }
 
 /**
@@ -54,12 +81,37 @@ function loadOpenApiSpec(): OpenApiSpec {
 }
 
 /**
- * Validate that all required schemas exist in the OpenAPI spec
+ * Validate that all required output schemas exist in the OpenAPI spec
  */
-function validateSchemas(openApiSpec: OpenApiSpec, configs: SchemaConfig[]): void {
+function validateOutputSchemas(openApiSpec: OpenApiSpec, configs: OutputSchemaConfig[]): void {
   for (const config of configs) {
     if (!openApiSpec.components?.schemas?.[config.modelName]) {
       throw new Error(`${config.modelName} schema not found in OpenAPI spec`);
+    }
+  }
+}
+
+/**
+ * Validate that all required input schemas can be found or generated
+ */
+function validateInputSchemas(openApiSpec: OpenApiSpec, configs: InputSchemaConfig[]): void {
+  for (const config of configs) {
+    if (config.operationId) {
+      // Find the operation in the OpenAPI spec
+      let found = false;
+      for (const [_path, pathItem] of Object.entries(openApiSpec.paths)) {
+        if (pathItem.get?.operationId === config.operationId) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        throw new Error(`Operation ${config.operationId} not found in OpenAPI spec`);
+      }
+    } else if (!config.customSchema) {
+      throw new Error(
+        `Input schema config must have either operationId or customSchema: ${config.outputFileName}`,
+      );
     }
   }
 }
@@ -99,18 +151,37 @@ function getBaseZodType(property: JsonSchema): string {
  */
 function getBaseZodTypeForSingleType(type: string, property: JsonSchema): string {
   switch (type) {
-    case "string":
+    case "string": {
       if (property.enum) {
         const enumValues = property.enum.map((v) => `"${v}"`).join(", ");
         return `z.enum([${enumValues}])`;
       }
-      if (property.format === "email") return "z.string().email()";
-      if (property.format === "uri") return "z.string().url()";
-      if (property.format === "date-time") return "z.string().datetime()";
-      return "z.string()";
+      let stringType = "z.string()";
+      if (property.format === "email") stringType = "z.string().email()";
+      else if (property.format === "uri") stringType = "z.string().url()";
+      else if (property.format === "date-time") stringType = "z.string().datetime()";
+
+      // Add length constraints
+      if (property.minLength !== undefined) {
+        stringType = `${stringType}.min(${property.minLength})`;
+      }
+      if (property.maxLength !== undefined) {
+        stringType = `${stringType}.max(${property.maxLength})`;
+      }
+
+      return stringType;
+    }
     case "integer":
-    case "number":
-      return "z.number()";
+    case "number": {
+      let numberType = "z.number()";
+      if (property.minimum !== undefined) {
+        numberType = `${numberType}.min(${property.minimum})`;
+      }
+      if (property.maximum !== undefined) {
+        numberType = `${numberType}.max(${property.maximum})`;
+      }
+      return numberType;
+    }
     case "boolean":
       return "z.boolean()";
     case "array":
@@ -189,9 +260,9 @@ function generateZodObjectFromSchema(schema: JsonSchema): string {
 }
 
 /**
- * Generate Zod schema from source schema and configuration
+ * Generate Zod schema from source schema and output configuration
  */
-function generateZodSchema(sourceSchema: JsonSchema, config: SchemaConfig): string {
+function generateOutputZodSchema(sourceSchema: JsonSchema, config: OutputSchemaConfig): string {
   if (config.wrapInArray) {
     // Create array wrapper schema
     const itemSchema = generateZodObjectFromSchema(sourceSchema);
@@ -212,22 +283,68 @@ function generateZodSchema(sourceSchema: JsonSchema, config: SchemaConfig): stri
 }
 
 /**
+ * Generate input schema from OpenAPI operation or custom schema
+ */
+function generateInputZodSchema(openApiSpec: OpenApiSpec, config: InputSchemaConfig): string {
+  if (config.customSchema) {
+    // Use custom schema definition
+    const schema: JsonSchema = {
+      type: "object",
+      properties: config.customSchema,
+      required: Object.keys(config.customSchema),
+    };
+    return generateZodObjectFromSchema(schema);
+  }
+
+  if (config.operationId) {
+    // Extract parameters from OpenAPI operation
+    for (const [_path, pathItem] of Object.entries(openApiSpec.paths)) {
+      if (pathItem.get?.operationId === config.operationId) {
+        const parameters = pathItem.get.parameters || [];
+        const properties: Record<string, JsonSchema> = {};
+        const required: string[] = [];
+
+        for (const param of parameters) {
+          properties[param.name] = {
+            ...param.schema,
+            description: param.description || param.schema.description,
+          };
+          if (param.required) {
+            required.push(param.name);
+          }
+        }
+
+        const schema: JsonSchema = {
+          type: "object",
+          properties,
+          required,
+        };
+
+        return generateZodObjectFromSchema(schema);
+      }
+    }
+  }
+
+  throw new Error(`Could not generate input schema for ${config.outputFileName}`);
+}
+
+/**
  * Write TypeScript schema file with Zod export
  */
-function writeZodSchemaFile(
+function writeSchemaFile(
   zodSchema: string,
   outputFileName: string,
   schemasDir: string,
-  config: SchemaConfig,
+  description: string,
+  schemaType: "input" | "output",
 ): void {
   const schemaPath = path.join(schemasDir, `${outputFileName}.ts`);
-
   const exportName = outputFileName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
 
   const fileContent = `import { z } from "zod";
 
 /**
- * Zod schema for ${config.modelName} output
+ * Zod schema for ${description}
  * Generated from OpenAPI specification
  */
 export const ${exportName} = ${zodSchema};
@@ -236,7 +353,7 @@ export type ${exportName.charAt(0).toUpperCase() + exportName.slice(1)}Type = z.
 `;
 
   fs.writeFileSync(schemaPath, fileContent);
-  console.log(`✅ Generated: ${outputFileName}.ts`);
+  console.log(`✅ Generated ${schemaType}: ${outputFileName}.ts`);
 }
 
 /**
@@ -253,14 +370,30 @@ function ensureSchemasDirectory(): string {
  * Print summary of generated schemas
  */
 function printSummary(
-  generatedSchemas: Array<{ name: string; requiredFields: number; totalFields: number }>,
+  outputSchemas: Array<{ name: string; requiredFields: number; totalFields: number }>,
+  inputSchemas: Array<{ name: string; requiredFields: number; totalFields: number }>,
 ): void {
   console.log("\n🎉 Zod schema extraction completed successfully!");
-  console.log(`📊 Generated ${generatedSchemas.length} TypeScript schemas:`);
-  for (const schema of generatedSchemas) {
-    console.log(
-      `   - ${schema.name} schema: ${schema.requiredFields} required fields, ${schema.totalFields} total fields`,
-    );
+  console.log(
+    `📊 Generated ${outputSchemas.length} output schemas and ${inputSchemas.length} input schemas:`,
+  );
+
+  if (outputSchemas.length > 0) {
+    console.log("   Output schemas:");
+    for (const schema of outputSchemas) {
+      console.log(
+        `     - ${schema.name}: ${schema.requiredFields} required fields, ${schema.totalFields} total fields`,
+      );
+    }
+  }
+
+  if (inputSchemas.length > 0) {
+    console.log("   Input schemas:");
+    for (const schema of inputSchemas) {
+      console.log(
+        `     - ${schema.name}: ${schema.requiredFields} required fields, ${schema.totalFields} total fields`,
+      );
+    }
   }
 }
 
@@ -270,34 +403,65 @@ async function main(): Promise<void> {
 
   try {
     // Load configuration from external file
-    const schemaConfigs: SchemaConfig[] = configData.schemas;
+    const outputSchemaConfigs: OutputSchemaConfig[] = configData.outputSchemas;
+    const inputSchemaConfigs: InputSchemaConfig[] = configData.inputSchemas;
 
     // Load and validate OpenAPI spec
     const openApiSpec = loadOpenApiSpec();
-    validateSchemas(openApiSpec, schemaConfigs);
+    validateOutputSchemas(openApiSpec, outputSchemaConfigs);
+    validateInputSchemas(openApiSpec, inputSchemaConfigs);
 
     // Prepare output directory
     const schemasDir = ensureSchemasDirectory();
 
-    const generatedSchemas: Array<{ name: string; requiredFields: number; totalFields: number }> =
-      [];
+    const generatedOutputSchemas: Array<{
+      name: string;
+      requiredFields: number;
+      totalFields: number;
+    }> = [];
+    const generatedInputSchemas: Array<{
+      name: string;
+      requiredFields: number;
+      totalFields: number;
+    }> = [];
 
-    // Process each schema configuration
-    for (const config of schemaConfigs) {
+    // Process output schema configurations
+    for (const config of outputSchemaConfigs) {
       const sourceSchema = openApiSpec.components.schemas[config.modelName];
-      const zodSchema = generateZodSchema(sourceSchema, config);
+      const zodSchema = generateOutputZodSchema(sourceSchema, config);
 
-      writeZodSchemaFile(zodSchema, config.outputFileName, schemasDir, config);
+      writeSchemaFile(
+        zodSchema,
+        config.outputFileName,
+        schemasDir,
+        `${config.modelName} output`,
+        "output",
+      );
 
       // Track for summary
-      generatedSchemas.push({
+      generatedOutputSchemas.push({
         name: config.modelName,
         requiredFields: sourceSchema.required?.length || 0,
         totalFields: Object.keys(sourceSchema.properties || {}).length,
       });
     }
 
-    printSummary(generatedSchemas);
+    // Process input schema configurations
+    for (const config of inputSchemaConfigs) {
+      const zodSchema = generateInputZodSchema(openApiSpec, config);
+
+      writeSchemaFile(zodSchema, config.outputFileName, schemasDir, config.description, "input");
+
+      // Track for summary - count fields from generated schema
+      const fieldCount = config.customSchema ? Object.keys(config.customSchema).length : 1;
+      generatedInputSchemas.push({
+        name: config.outputFileName,
+        requiredFields: fieldCount,
+        totalFields: fieldCount,
+      });
+    }
+
+    printSummary(generatedOutputSchemas, generatedInputSchemas);
   } catch (error) {
     console.error(
       "❌ Zod schema extraction failed:",
