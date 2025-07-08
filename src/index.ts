@@ -216,4 +216,4 @@ export class GravatarMcpServer extends McpAgent {
   }
 }
 
-export default GravatarMcpServer.mount("/mcp");
+export default GravatarMcpServer.mount("/sse");
