@@ -188,13 +188,38 @@ export class GravatarMcpServer extends McpAgent {
         description:
           "Retrieve the avatar image for a Gravatar profile using an email address. The email is automatically normalized and hashed before querying the Gravatar API. <examples>'Get the avatar image for user@example.com' or 'Show me a 200px avatar for john.doe@company.com.'</examples>",
         inputSchema: {
-          email: z.string().email(),
-          size: z.number().min(1).max(2048).optional(),
+          email: z
+            .string()
+            .email()
+            .describe(
+              "The email address associated with the Gravatar profile. Can be any valid email format - the system will automatically normalize and hash the email for lookup. The email is processed securely and not stored.",
+            ),
+          size: z
+            .number()
+            .min(1)
+            .max(2048)
+            .optional()
+            .describe(
+              "Desired avatar size in pixels (1-2048). Images are square, so this sets both width and height. Common sizes: 80 (default web), 200 (high-res web), 512 (large displays). Gravatar will scale the image appropriately.",
+            ),
           defaultOption: z
             .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
-            .optional(),
-          forceDefault: z.boolean().optional(),
-          rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+            .optional()
+            .describe(
+              "Fallback image style when no avatar exists. Options: '404' (return HTTP 404 error instead of image), 'mp' (mystery person silhouette), 'identicon' (geometric pattern), 'monsterid' (generated monster), 'wavatar' (generated face), 'retro' (8-bit style), 'robohash' (robot), 'blank' (transparent). If not specified, Gravatar's default image is returned when no avatar exists.",
+            ),
+          forceDefault: z
+            .boolean()
+            .optional()
+            .describe(
+              "When true, always returns the default image instead of the user's avatar. Useful for testing default options or ensuring consistent placeholder images.",
+            ),
+          rating: z
+            .enum(["G", "PG", "R", "X", "g", "pg", "r", "x"])
+            .optional()
+            .describe(
+              "Maximum content rating to display. 'G' (general audiences), 'PG' (parental guidance), 'R' (restricted), 'X' (explicit). If user's avatar exceeds this rating, the default image is shown instead.",
+            ),
         },
         annotations: {
           readOnlyHint: true,
@@ -242,13 +267,38 @@ export class GravatarMcpServer extends McpAgent {
         description:
           "Retrieve the avatar image for a Gravatar profile using an avatar identifier. More efficient when you already have the hashed identifier. <examples>'Get the avatar image for this Gravatar ID' or 'Show me a 150px avatar for user ID abc123...'</examples>",
         inputSchema: {
-          avatarIdentifier: z.string().min(1),
-          size: z.number().min(1).max(2048).optional(),
+          avatarIdentifier: z
+            .string()
+            .min(1)
+            .describe(
+              "Avatar identifier for the Gravatar profile. An Avatar Identifier is an email address that has been normalized (e.g. lower-cased and trimmed) and then hashed with either SHA256 (preferred) or MD5 (deprecated). Note: Unlike profile identifiers, avatar identifiers cannot use URL slugs - only email hashes are supported.",
+            ),
+          size: z
+            .number()
+            .min(1)
+            .max(2048)
+            .optional()
+            .describe(
+              "Desired avatar size in pixels (1-2048). Images are square, so this sets both width and height. Common sizes: 80 (default web), 200 (high-res web), 512 (large displays). Gravatar will scale the image appropriately.",
+            ),
           defaultOption: z
             .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
-            .optional(),
-          forceDefault: z.boolean().optional(),
-          rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+            .optional()
+            .describe(
+              "Fallback image style when no avatar exists. Options: '404' (return HTTP 404 error instead of image), 'mp' (mystery person silhouette), 'identicon' (geometric pattern), 'monsterid' (generated monster), 'wavatar' (generated face), 'retro' (8-bit style), 'robohash' (robot), 'blank' (transparent). If not specified, Gravatar's default image is returned when no avatar exists.",
+            ),
+          forceDefault: z
+            .boolean()
+            .optional()
+            .describe(
+              "When true, always returns the default image instead of the user's avatar. Useful for testing default options or ensuring consistent placeholder images.",
+            ),
+          rating: z
+            .enum(["G", "PG", "R", "X", "g", "pg", "r", "x"])
+            .optional()
+            .describe(
+              "Maximum content rating to display. 'G' (general audiences), 'PG' (parental guidance), 'R' (restricted), 'X' (explicit). If user's avatar exceeds this rating, the default image is shown instead.",
+            ),
         },
         annotations: {
           readOnlyHint: true,
