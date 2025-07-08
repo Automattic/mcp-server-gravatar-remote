@@ -150,7 +150,7 @@ function generateNestedZodObject(schema: JsonSchema): string {
 }
 
 /**
- * Map OpenAPI property to Zod type with required/optional handling
+ * Map OpenAPI property to Zod type with required/optional handling and descriptions
  */
 function mapOpenApiPropertyToZod(
   propertyName: string,
@@ -158,7 +158,12 @@ function mapOpenApiPropertyToZod(
   requiredFields: string[],
 ): string {
   const isRequired = requiredFields.includes(propertyName);
-  const baseZodType = getBaseZodType(property);
+  let baseZodType = getBaseZodType(property);
+
+  // Add description if available
+  if (property.description) {
+    baseZodType = `${baseZodType}.describe("${property.description.replace(/"/g, '\\"')}")`;
+  }
 
   return isRequired ? baseZodType : `${baseZodType}.optional()`;
 }
@@ -190,8 +195,15 @@ function generateZodSchema(sourceSchema: JsonSchema, config: SchemaConfig): stri
   if (config.wrapInArray) {
     // Create array wrapper schema
     const itemSchema = generateZodObjectFromSchema(sourceSchema);
+    let arrayProperty = `z.array(${itemSchema})`;
+
+    // Add description to array property if provided
+    if (config.wrapInArray.description) {
+      arrayProperty = `${arrayProperty}.describe("${config.wrapInArray.description.replace(/"/g, '\\"')}")`;
+    }
+
     return `z.object({
-  ${config.wrapInArray.propertyName}: z.array(${itemSchema})
+  ${config.wrapInArray.propertyName}: ${arrayProperty}
 })`;
   }
 
