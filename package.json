@@ -5,7 +5,9 @@
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
+		"extract-schemas": "tsx scripts/extract-schemas.ts",
 		"format": "biome format --write",
+		"lint": "biome lint",
 		"lint:fix": "biome lint --fix",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types",
@@ -18,8 +20,11 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",
+		"@openapitools/openapi-generator-cli": "^2.7.0",
 		"@types/node": "^24.0.10",
+		"tsx": "^4.0.0",
 		"typescript": "^5.8.3",
+		"universal-user-agent": "^7.0.0",
 		"wrangler": "^4.22.0"
 	}
 }

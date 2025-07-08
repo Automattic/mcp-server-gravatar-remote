@@ -1,3 +1,8 @@
+# Mac OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
 # Logs
 
 logs
@@ -170,3 +175,7 @@ dist
 
 .dev.vars
 .wrangler/
+
+# Client
+.clinerules/
+memory-bank/
