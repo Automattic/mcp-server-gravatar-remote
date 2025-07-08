@@ -65,6 +65,13 @@ function validateSchemas(openApiSpec: OpenApiSpec, configs: SchemaConfig[]): voi
 }
 
 /**
+ * Convert snake_case to camelCase to match TypeScript interface
+ */
+function snakeToCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
  * Convert OpenAPI type to base Zod type
  */
 function getBaseZodType(property: JsonSchema): string {
@@ -134,8 +141,9 @@ function generateNestedZodObject(schema: JsonSchema): string {
   }
 
   const zodProperties = properties.map(([propertyName, propertySchema]) => {
+    const camelCasePropertyName = snakeToCamelCase(propertyName);
     const zodType = mapOpenApiPropertyToZod(propertyName, propertySchema, requiredFields);
-    return `    ${propertyName}: ${zodType}`;
+    return `    ${camelCasePropertyName}: ${zodType}`;
   });
 
   return `z.object({\n${zodProperties.join(",\n")}\n  })`;
@@ -167,8 +175,9 @@ function generateZodObjectFromSchema(schema: JsonSchema): string {
   }
 
   const zodProperties = properties.map(([propertyName, propertySchema]) => {
+    const camelCasePropertyName = snakeToCamelCase(propertyName);
     const zodType = mapOpenApiPropertyToZod(propertyName, propertySchema, requiredFields);
-    return `  ${propertyName}: ${zodType}`;
+    return `  ${camelCasePropertyName}: ${zodType}`;
   });
 
   return `z.object({\n${zodProperties.join(",\n")}\n})`;

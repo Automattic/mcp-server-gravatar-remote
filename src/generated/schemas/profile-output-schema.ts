@@ -5,52 +5,52 @@ import { z } from "zod";
  * Generated from OpenAPI specification
  */
 export const profileOutputSchema = z.object({
-  user_id: z.number().optional(),
-  user_login: z.string().optional(),
+  userId: z.number().optional(),
+  userLogin: z.string().optional(),
   hash: z.string(),
-  display_name: z.string(),
-  profile_url: z.string().url(),
-  avatar_url: z.string().url(),
-  avatar_alt_text: z.string(),
+  displayName: z.string(),
+  profileUrl: z.string().url(),
+  avatarUrl: z.string().url(),
+  avatarAltText: z.string(),
   location: z.string(),
   description: z.string(),
-  job_title: z.string(),
+  jobTitle: z.string(),
   company: z.string(),
-  verified_accounts: z.array(z.unknown()),
+  verifiedAccounts: z.array(z.unknown()),
   pronunciation: z.string(),
   pronouns: z.string(),
   timezone: z.string().optional(),
   languages: z.array(z.unknown()).optional(),
-  first_name: z.string().optional(),
-  last_name: z.string().optional(),
-  is_organization: z.boolean().optional(),
-  header_image: z.string().optional(),
-  background_color: z.string().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  isOrganization: z.boolean().optional(),
+  headerImage: z.string().optional(),
+  backgroundColor: z.string().optional(),
   links: z.array(z.unknown()).optional(),
   interests: z.array(z.unknown()).optional(),
   payments: z.object({
     links: z.array(z.unknown()),
-    crypto_wallets: z.array(z.unknown())
+    cryptoWallets: z.array(z.unknown())
   }).optional(),
-  contact_info: z.object({
-    home_phone: z.string().optional(),
-    work_phone: z.string().optional(),
-    cell_phone: z.string().optional(),
+  contactInfo: z.object({
+    homePhone: z.string().optional(),
+    workPhone: z.string().optional(),
+    cellPhone: z.string().optional(),
     email: z.string().email().optional(),
-    contact_form: z.string().url().optional(),
+    contactForm: z.string().url().optional(),
     calendar: z.string().url().optional()
   }).optional(),
   gallery: z.array(z.unknown()).optional(),
-  number_verified_accounts: z.number().optional(),
-  last_profile_edit: z.string().datetime().nullable().optional(),
-  registration_date: z.string().datetime().nullable().optional(),
-  section_visibility: z.object({
-    hidden_contact_info: z.boolean().optional(),
-    hidden_links: z.boolean().optional(),
-    hidden_interests: z.boolean().optional(),
-    hidden_wallet: z.boolean().optional(),
-    hidden_photos: z.boolean().optional(),
-    hidden_verified_accounts: z.boolean().optional()
+  numberVerifiedAccounts: z.number().optional(),
+  lastProfileEdit: z.string().datetime().nullable().optional(),
+  registrationDate: z.string().datetime().nullable().optional(),
+  sectionVisibility: z.object({
+    hiddenContactInfo: z.boolean().optional(),
+    hiddenLinks: z.boolean().optional(),
+    hiddenInterests: z.boolean().optional(),
+    hiddenWallet: z.boolean().optional(),
+    hiddenPhotos: z.boolean().optional(),
+    hiddenVerifiedAccounts: z.boolean().optional()
   }).optional()
 });
 
