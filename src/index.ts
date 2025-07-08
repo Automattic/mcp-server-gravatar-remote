@@ -179,16 +179,26 @@ export class GravatarMcpServer extends McpAgent {
     );
 
     // Register get_avatar_by_email tool
-    this.server.tool(
+    this.server.registerTool(
       "get_avatar_by_email",
       {
-        email: z.string().email(),
-        size: z.number().min(1).max(2048).optional(),
-        defaultOption: z
-          .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
-          .optional(),
-        forceDefault: z.boolean().optional(),
-        rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+        title: "Get Avatar Image by Email",
+        description:
+          "Retrieve the avatar image for a Gravatar profile using an email address. The email is automatically normalized and hashed before querying the Gravatar API. <examples>'Get the avatar image for user@example.com' or 'Show me a 200px avatar for john.doe@company.com.'</examples>",
+        inputSchema: {
+          email: z.string().email(),
+          size: z.number().min(1).max(2048).optional(),
+          defaultOption: z
+            .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
+            .optional(),
+          forceDefault: z.boolean().optional(),
+          rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+        },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: true,
+        },
       },
       async ({ email, size, defaultOption, forceDefault, rating }) => {
         try {
@@ -223,16 +233,26 @@ export class GravatarMcpServer extends McpAgent {
     );
 
     // Register get_avatar_by_id tool
-    this.server.tool(
+    this.server.registerTool(
       "get_avatar_by_id",
       {
-        avatarIdentifier: z.string().min(1),
-        size: z.number().min(1).max(2048).optional(),
-        defaultOption: z
-          .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
-          .optional(),
-        forceDefault: z.boolean().optional(),
-        rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+        title: "Get Avatar Image by ID",
+        description:
+          "Retrieve the avatar image for a Gravatar profile using an avatar identifier. More efficient when you already have the hashed identifier. <examples>'Get the avatar image for this Gravatar ID' or 'Show me a 150px avatar for user ID abc123...'</examples>",
+        inputSchema: {
+          avatarIdentifier: z.string().min(1),
+          size: z.number().min(1).max(2048).optional(),
+          defaultOption: z
+            .enum(["404", "mp", "identicon", "monsterid", "wavatar", "retro", "robohash", "blank"])
+            .optional(),
+          forceDefault: z.boolean().optional(),
+          rating: z.enum(["G", "PG", "R", "X", "g", "pg", "r", "x"]).optional(),
+        },
+        annotations: {
+          readOnlyHint: true,
+          openWorldHint: true,
+          idempotentHint: true,
+        },
       },
       async ({ avatarIdentifier, size, defaultOption, forceDefault, rating }) => {
         try {
