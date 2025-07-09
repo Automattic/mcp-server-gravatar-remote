@@ -69,7 +69,7 @@ interface OpenApiSpec {
 /**
  * Load and parse the OpenAPI specification
  */
-function loadOpenApiSpec(): OpenApiSpec {
+export function loadOpenApiSpec(): OpenApiSpec {
   const openApiPath = path.join(process.cwd(), "openapi.json");
   if (!fs.existsSync(openApiPath)) {
     throw new Error("openapi.json not found in project root");
@@ -83,7 +83,10 @@ function loadOpenApiSpec(): OpenApiSpec {
 /**
  * Validate that all required output schemas exist in the OpenAPI spec
  */
-function validateOutputSchemas(openApiSpec: OpenApiSpec, configs: OutputSchemaConfig[]): void {
+export function validateOutputSchemas(
+  openApiSpec: OpenApiSpec,
+  configs: OutputSchemaConfig[],
+): void {
   for (const config of configs) {
     if (!openApiSpec.components?.schemas?.[config.modelName]) {
       throw new Error(`${config.modelName} schema not found in OpenAPI spec`);
@@ -119,14 +122,14 @@ function validateInputSchemas(openApiSpec: OpenApiSpec, configs: InputSchemaConf
 /**
  * Convert snake_case to camelCase to match TypeScript interface
  */
-function snakeToCamelCase(str: string): string {
+export function snakeToCamelCase(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
 /**
  * Convert OpenAPI type to base Zod type
  */
-function getBaseZodType(property: JsonSchema): string {
+export function getBaseZodType(property: JsonSchema): string {
   // Handle array types
   if (Array.isArray(property.type)) {
     // Handle nullable types like ["string", "null"]
@@ -223,7 +226,7 @@ function generateNestedZodObject(schema: JsonSchema): string {
 /**
  * Map OpenAPI property to Zod type with required/optional handling and descriptions
  */
-function mapOpenApiPropertyToZod(
+export function mapOpenApiPropertyToZod(
   propertyName: string,
   property: JsonSchema,
   requiredFields: string[],
@@ -242,7 +245,7 @@ function mapOpenApiPropertyToZod(
 /**
  * Generate complete Zod object from OpenAPI schema
  */
-function generateZodObjectFromSchema(schema: JsonSchema): string {
+export function generateZodObjectFromSchema(schema: JsonSchema): string {
   const properties = Object.entries(schema.properties || {});
   const requiredFields = schema.required || [];
 
@@ -471,5 +474,7 @@ async function main(): Promise<void> {
   }
 }
 
-// Run the script
-main();
+// Only run the script when executed directly, not when imported as a module
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main();
+}
