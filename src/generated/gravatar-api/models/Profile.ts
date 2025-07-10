@@ -358,8 +358,8 @@ export function ProfileToJSONTyped(value?: Profile | null, ignoreDiscriminator: 
         'contact_info': ProfileContactInfoToJSON(value['contactInfo']),
         'gallery': value['gallery'] == null ? undefined : ((value['gallery'] as Array<any>).map(GalleryImageToJSON)),
         'number_verified_accounts': value['numberVerifiedAccounts'],
-        'last_profile_edit': value['lastProfileEdit'] == null ? undefined : ((value['lastProfileEdit'] as any).toISOString()),
-        'registration_date': value['registrationDate'] == null ? undefined : ((value['registrationDate'] as any).toISOString()),
+        'last_profile_edit': value['lastProfileEdit'] === null ? null : ((value['lastProfileEdit'] as any)?.toISOString()),
+        'registration_date': value['registrationDate'] === null ? null : ((value['registrationDate'] as any)?.toISOString()),
         'section_visibility': ProfileSectionVisibilityToJSON(value['sectionVisibility']),
     };
 }

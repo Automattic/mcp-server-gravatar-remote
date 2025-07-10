@@ -15,7 +15,7 @@ export interface AvatarParams {
 }
 
 export interface AvatarResult {
-  buffer: Buffer;
+  buffer: Uint8Array;
   mimeType: string;
 }
 
@@ -100,7 +100,7 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
 
   // Convert the response to a buffer
   const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = new Uint8Array(arrayBuffer);
 
   return {
     buffer,
@@ -132,16 +132,4 @@ export function avatarParams(
     ...(forceDefault !== undefined && { forceDefault }),
     ...(rating !== undefined && { rating }),
   };
-}
-
-/**
- * Validate avatar identifier format
- * @param identifier - The identifier to validate
- * @returns True if the identifier appears valid
- */
-export function isValidAvatarIdentifier(identifier: string): boolean {
-  // Avatar identifiers can be:
-  // - 64-character hex strings (email hashes)
-  // - Shorter alphanumeric strings (avatar IDs)
-  return /^[a-f0-9]{64}$|^[a-zA-Z0-9]+$/i.test(identifier);
 }

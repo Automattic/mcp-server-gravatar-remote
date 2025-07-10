@@ -127,8 +127,12 @@ export class ExperimentalApi extends runtime.BaseAPI implements ExperimentalApiI
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
+
+        let urlPath = `/profiles/{profileIdentifier}/inferred-interests`;
+        urlPath = urlPath.replace(`{${"profileIdentifier"}}`, encodeURIComponent(String(requestParameters['profileIdentifier'])));
+
         const response = await this.request({
-            path: `/profiles/{profileIdentifier}/inferred-interests`.replace(`{${"profileIdentifier"}}`, encodeURIComponent(String(requestParameters['profileIdentifier']))),
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -155,8 +159,11 @@ export class ExperimentalApi extends runtime.BaseAPI implements ExperimentalApiI
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+
+        let urlPath = `/verified-accounts/services`;
+
         const response = await this.request({
-            path: `/verified-accounts/services`,
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -214,8 +221,11 @@ export class ExperimentalApi extends runtime.BaseAPI implements ExperimentalApiI
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
+
+        let urlPath = `/profiles/search/by-verified-account`;
+
         const response = await this.request({
-            path: `/profiles/search/by-verified-account`,
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

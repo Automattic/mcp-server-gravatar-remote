@@ -112,15 +112,16 @@ export class GravatarMcpServer extends McpAgent {
         try {
           const identifier = await generateIdentifier(email);
           const interests = await getInferredInterests(identifier);
+          const structuredInterests = { inferredInterests: interests };
 
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify(interests, null, 2),
+                text: JSON.stringify(structuredInterests, null, 2),
               },
             ],
-            structuredContent: { inferredInterests: interests },
+            structuredContent: structuredInterests,
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -155,15 +156,16 @@ export class GravatarMcpServer extends McpAgent {
       async ({ profileIdentifier }) => {
         try {
           const interests = await getInferredInterests(profileIdentifier);
+          const structuredInterests = { inferredInterests: interests };
 
           return {
             content: [
               {
                 type: "text",
-                text: JSON.stringify(interests, null, 2),
+                text: JSON.stringify(structuredInterests, null, 2),
               },
             ],
-            structuredContent: { inferredInterests: interests },
+            structuredContent: structuredInterests,
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -239,7 +241,7 @@ export class GravatarMcpServer extends McpAgent {
             content: [
               {
                 type: "image",
-                data: avatarResult.buffer.toString("base64"),
+                data: btoa(String.fromCharCode(...avatarResult.buffer)),
                 mimeType: avatarResult.mimeType,
               },
             ],
@@ -316,7 +318,7 @@ export class GravatarMcpServer extends McpAgent {
             content: [
               {
                 type: "image",
-                data: avatarResult.buffer.toString("base64"),
+                data: btoa(String.fromCharCode(...avatarResult.buffer)),
                 mimeType: avatarResult.mimeType,
               },
             ],

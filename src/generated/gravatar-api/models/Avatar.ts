@@ -63,7 +63,7 @@ export interface Avatar {
  */
 export const AvatarRatingEnum = {
     G: 'G',
-    Pg: 'PG',
+    PG: 'PG',
     R: 'R',
     X: 'X'
 } as const;

@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "es2021",
-		"lib": ["es2021"],
+		"lib": ["es2021", "webworker"],
 		"jsx": "react-jsx",
 		"module": "es2022",
 		"moduleResolution": "bundler",
@@ -15,9 +15,10 @@
 		"strict": true,
 		"skipLibCheck": true,
 		"types": [
-			"./worker-configuration.d.ts",
-			"node"
+			"@cloudflare/workers-types",
+			"./worker-configuration.d.ts"
 		]
 	},
-	"include": ["worker-configuration.d.ts", "src/**/*.ts"]
+	"include": ["worker-configuration.d.ts", "src/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
 }
