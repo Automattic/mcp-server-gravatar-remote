@@ -133,15 +133,3 @@ export function avatarParams(
     ...(rating !== undefined && { rating }),
   };
 }
-
-/**
- * Validate avatar identifier format
- * @param identifier - The identifier to validate
- * @returns True if the identifier appears valid
- */
-export function isValidAvatarIdentifier(identifier: string): boolean {
-  // Avatar identifiers can be:
-  // - 64-character hex strings (email hashes)
-  // - Shorter alphanumeric strings (avatar IDs)
-  return /^[a-f0-9]{64}$|^[a-zA-Z0-9]+$/i.test(identifier);
-}
