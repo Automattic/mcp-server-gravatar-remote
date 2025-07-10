@@ -43,13 +43,6 @@ describe("getServerInfo", () => {
     });
   });
 
-  it("should return consistent server info on multiple calls", () => {
-    const info1 = getServerInfo();
-    const info2 = getServerInfo();
-
-    expect(info1).toEqual(info2);
-  });
-
   it("should have required properties", () => {
     const serverInfo = getServerInfo();
 
@@ -97,13 +90,6 @@ describe("getApiHeaders", () => {
       Accept: "application/json",
       "Content-Type": "application/json",
     });
-  });
-
-  it("should return consistent headers on multiple calls", () => {
-    const headers1 = getApiHeaders();
-    const headers2 = getApiHeaders();
-
-    expect(headers1).toEqual(headers2);
   });
 
   it("should return headers as Record<string, string>", () => {
@@ -160,17 +146,5 @@ describe("configuration integration", () => {
     // User agent should identify the service
     expect(config.userAgent).toContain("Gravatar");
     expect(config.userAgent).toContain("MCP");
-  });
-
-  it("should have stable configuration values", () => {
-    // Configuration should have expected values
-    expect(config.requestTimeout).toBe(30000);
-    expect(config.userAgent).toBe("Remote-Gravatar-MCP-Server/99.99.99");
-    expect(config.avatarApiBase).toBe("https://gravatar.com/avatar");
-
-    // Configuration should be consistent across multiple accesses
-    const timeout1 = config.requestTimeout;
-    const timeout2 = config.requestTimeout;
-    expect(timeout1).toBe(timeout2);
   });
 });

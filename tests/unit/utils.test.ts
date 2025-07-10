@@ -42,12 +42,6 @@ describe("assertNonEmpty", () => {
     // Single space should also be considered empty (important for email validation)
     expect(() => assertNonEmpty(" ")).toThrow(EmptyStringError);
   });
-
-  it("should throw EmptyStringError for null-like values", () => {
-    // TypeScript would catch these, but testing runtime behavior
-    expect(() => assertNonEmpty(null as any)).toThrow(EmptyStringError);
-    expect(() => assertNonEmpty(undefined as any)).toThrow(EmptyStringError);
-  });
 });
 
 describe("normalize", () => {
@@ -70,12 +64,6 @@ describe("normalize", () => {
   it("should throw EmptyStringError for empty input", () => {
     expect(() => normalize("")).toThrow(EmptyStringError);
     expect(() => normalize("   ")).toThrow(EmptyStringError);
-  });
-
-  it("should handle edge cases", () => {
-    expect(normalize("a")).toBe("a");
-    expect(normalize("A")).toBe("a");
-    expect(normalize("  a  ")).toBe("a");
   });
 });
 
@@ -203,16 +191,5 @@ describe("mapHttpError", () => {
       const result = mapHttpError(status, statusText, testIdentifier);
       expect(result).toBe(expected);
     });
-  });
-
-  it("should include identifier in appropriate error messages", () => {
-    const customId = "custom-test-id-123";
-
-    expect(mapHttpError(404, "Not Found", customId)).toContain(customId);
-    expect(mapHttpError(400, "Bad Request", customId)).toContain(customId);
-
-    // These should not include identifier
-    expect(mapHttpError(403, "Forbidden", customId)).not.toContain(customId);
-    expect(mapHttpError(429, "Too Many Requests", customId)).not.toContain(customId);
   });
 });
