@@ -142,8 +142,11 @@ export class ProfilesApi extends runtime.BaseAPI implements ProfilesApiInterface
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/associated-email`;
+
         const response = await this.request({
-            path: `/me/associated-email`,
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -175,8 +178,11 @@ export class ProfilesApi extends runtime.BaseAPI implements ProfilesApiInterface
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/profile`;
+
         const response = await this.request({
-            path: `/me/profile`,
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -218,8 +224,12 @@ export class ProfilesApi extends runtime.BaseAPI implements ProfilesApiInterface
                 headerParameters["Authorization"] = `Bearer ${tokenString}`;
             }
         }
+
+        let urlPath = `/profiles/{profileIdentifier}`;
+        urlPath = urlPath.replace(`{${"profileIdentifier"}}`, encodeURIComponent(String(requestParameters['profileIdentifier'])));
+
         const response = await this.request({
-            path: `/profiles/{profileIdentifier}`.replace(`{${"profileIdentifier"}}`, encodeURIComponent(String(requestParameters['profileIdentifier']))),
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -260,8 +270,11 @@ export class ProfilesApi extends runtime.BaseAPI implements ProfilesApiInterface
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/profile`;
+
         const response = await this.request({
-            path: `/me/profile`,
+            path: urlPath,
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,

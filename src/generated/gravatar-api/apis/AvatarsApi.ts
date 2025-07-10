@@ -171,8 +171,12 @@ export class AvatarsApi extends runtime.BaseAPI implements AvatarsApiInterface {
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/avatars/{imageHash}`;
+        urlPath = urlPath.replace(`{${"imageHash"}}`, encodeURIComponent(String(requestParameters['imageHash'])));
+
         const response = await this.request({
-            path: `/me/avatars/{imageHash}`.replace(`{${"imageHash"}}`, encodeURIComponent(String(requestParameters['imageHash']))),
+            path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -207,8 +211,11 @@ export class AvatarsApi extends runtime.BaseAPI implements AvatarsApiInterface {
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/avatars`;
+
         const response = await this.request({
-            path: `/me/avatars`,
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -256,8 +263,12 @@ export class AvatarsApi extends runtime.BaseAPI implements AvatarsApiInterface {
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/avatars/{imageId}/email`;
+        urlPath = urlPath.replace(`{${"imageId"}}`, encodeURIComponent(String(requestParameters['imageId'])));
+
         const response = await this.request({
-            path: `/me/avatars/{imageId}/email`.replace(`{${"imageId"}}`, encodeURIComponent(String(requestParameters['imageId']))),
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
@@ -305,8 +316,12 @@ export class AvatarsApi extends runtime.BaseAPI implements AvatarsApiInterface {
             headerParameters["Authorization"] = await this.configuration.accessToken("oauth", []);
         }
 
+
+        let urlPath = `/me/avatars/{imageHash}`;
+        urlPath = urlPath.replace(`{${"imageHash"}}`, encodeURIComponent(String(requestParameters['imageHash'])));
+
         const response = await this.request({
-            path: `/me/avatars/{imageHash}`.replace(`{${"imageHash"}}`, encodeURIComponent(String(requestParameters['imageHash']))),
+            path: urlPath,
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
@@ -374,8 +389,11 @@ export class AvatarsApi extends runtime.BaseAPI implements AvatarsApiInterface {
             formParams.append('image', requestParameters['image'] as any);
         }
 
+
+        let urlPath = `/me/avatars`;
+
         const response = await this.request({
-            path: `/me/avatars`,
+            path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,

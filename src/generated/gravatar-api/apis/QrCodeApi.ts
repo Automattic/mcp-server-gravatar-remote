@@ -95,8 +95,12 @@ export class QrCodeApi extends runtime.BaseAPI implements QrCodeApiInterface {
 
         const headerParameters: runtime.HTTPHeaders = {};
 
+
+        let urlPath = `/qr-code/{sha256_hash}`;
+        urlPath = urlPath.replace(`{${"sha256_hash"}}`, encodeURIComponent(String(requestParameters['sha256Hash'])));
+
         const response = await this.request({
-            path: `/qr-code/{sha256_hash}`.replace(`{${"sha256_hash"}}`, encodeURIComponent(String(requestParameters['sha256Hash']))),
+            path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

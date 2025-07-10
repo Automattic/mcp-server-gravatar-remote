@@ -13,7 +13,9 @@
           "supportsES6": true,
           "typescriptThreePlus": true,
           "withInterfaces": true,
-          "importFileExtension": ".js"
+          "importFileExtension": ".js",
+          "modelPropertyNaming": "camelCase",
+          "enumPropertyNaming": "original"
         }
       }
     }
