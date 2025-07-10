@@ -52,7 +52,7 @@ describe("Avatar Utils", () => {
       });
 
       expect(result).toEqual({
-        buffer: Buffer.from(mockImageBuffer),
+        buffer: new Uint8Array(mockImageBuffer),
         mimeType: "image/png",
       });
     });
@@ -222,7 +222,7 @@ describe("Avatar Utils", () => {
       }
     });
 
-    it("should convert ArrayBuffer to Buffer correctly", async () => {
+    it("should convert ArrayBuffer to Uint8Array correctly", async () => {
       const testData = new Uint8Array([1, 2, 3, 4, 5]);
       const testBuffer = testData.buffer;
 
@@ -237,7 +237,7 @@ describe("Avatar Utils", () => {
 
       const result = await fetchAvatar({ avatarIdentifier: mockIdentifier });
 
-      expect(result.buffer).toBeInstanceOf(Buffer);
+      expect(result.buffer).toBeInstanceOf(Uint8Array);
       expect(Array.from(result.buffer)).toEqual([1, 2, 3, 4, 5]);
     });
   });

@@ -15,7 +15,7 @@ export interface AvatarParams {
 }
 
 export interface AvatarResult {
-  buffer: Buffer;
+  buffer: Uint8Array;
   mimeType: string;
 }
 
@@ -100,7 +100,7 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
 
   // Convert the response to a buffer
   const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = new Uint8Array(arrayBuffer);
 
   return {
     buffer,

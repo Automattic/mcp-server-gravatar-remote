@@ -239,7 +239,7 @@ export class GravatarMcpServer extends McpAgent {
             content: [
               {
                 type: "image",
-                data: avatarResult.buffer.toString("base64"),
+                data: btoa(String.fromCharCode(...avatarResult.buffer)),
                 mimeType: avatarResult.mimeType,
               },
             ],
@@ -316,7 +316,7 @@ export class GravatarMcpServer extends McpAgent {
             content: [
               {
                 type: "image",
-                data: avatarResult.buffer.toString("base64"),
+                data: btoa(String.fromCharCode(...avatarResult.buffer)),
                 mimeType: avatarResult.mimeType,
               },
             ],
