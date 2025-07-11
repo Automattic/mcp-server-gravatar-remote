@@ -2,15 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getProfile } from "../../src/tools/profile-utils.js";
 
 // Mock the generated API module
-vi.mock("../../src/generated/gravatar-api/index.js", () => {
+vi.mock("../../src/generated/clients/index.js", () => {
   const mockGetProfileById = vi.fn();
-  const mockConfiguration = vi.fn();
 
   return {
-    ProfilesApi: vi.fn(() => ({
-      getProfileById: mockGetProfileById,
-    })),
-    Configuration: mockConfiguration,
+    getProfileById: mockGetProfileById,
   };
 });
 
@@ -49,27 +45,19 @@ describe("Profile Utils", () => {
     };
 
     it("should return profile data on successful API call", async () => {
-      const { ProfilesApi } = await import("../../src/generated/gravatar-api/index.js");
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
 
-      const mockInstance = new (ProfilesApi as any)();
-      const mockGetProfileById = mockInstance.getProfileById;
-
-      mockGetProfileById.mockResolvedValue(mockProfileData);
+      (getProfileById as any).mockResolvedValue(mockProfileData);
 
       const result = await getProfile(testIdentifier);
 
-      expect(mockGetProfileById).toHaveBeenCalledWith({
-        profileIdentifier: testIdentifier,
-      });
+      expect(getProfileById).toHaveBeenCalledWith(testIdentifier, expect.any(Object));
       expect(result).toEqual(mockProfileData);
     });
 
     it("should handle HTTP errors", async () => {
-      const { ProfilesApi } = await import("../../src/generated/gravatar-api/index.js");
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
       const { mapHttpError } = await import("../../src/common/utils.js");
-
-      const mockInstance = new (ProfilesApi as any)();
-      const mockGetProfileById = mockInstance.getProfileById;
 
       const mockError = {
         response: {
@@ -79,7 +67,7 @@ describe("Profile Utils", () => {
       };
       const mappedErrorMessage = "No profile found for identifier: test-profile-id";
 
-      mockGetProfileById.mockRejectedValue(mockError);
+      (getProfileById as any).mockRejectedValue(mockError);
       (mapHttpError as any).mockReturnValue(mappedErrorMessage);
 
       await expect(getProfile(testIdentifier)).rejects.toThrow(mappedErrorMessage);
@@ -88,13 +76,10 @@ describe("Profile Utils", () => {
     });
 
     it("should handle network errors", async () => {
-      const { ProfilesApi } = await import("../../src/generated/gravatar-api/index.js");
-
-      const mockInstance = new (ProfilesApi as any)();
-      const mockGetProfileById = mockInstance.getProfileById;
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
 
       const networkError = new Error("Network connection failed");
-      mockGetProfileById.mockRejectedValue(networkError);
+      (getProfileById as any).mockRejectedValue(networkError);
 
       await expect(getProfile(testIdentifier)).rejects.toThrow(
         "Network error while fetching profile: Network connection failed",
