@@ -1,7 +1,6 @@
 /**
  * Shared utilities for avatar API calls
  * Uses direct HTTP calls to Gravatar avatar endpoints
- * Following STDIO implementation pattern
  */
 
 import { config } from "../config/server-config.js";
@@ -55,7 +54,6 @@ function detectMimeType(response: Response): string {
 
 /**
  * Fetch avatar image by identifier
- * Following STDIO implementation pattern
  */
 export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   // Build avatar URL
