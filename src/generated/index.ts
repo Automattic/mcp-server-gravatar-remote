@@ -234,13 +234,4 @@ export {
   updateProfileMutationRequestSchema,
   updateProfileMutationResponseSchema,
 } from './schemas/updateProfileSchema.js'
-export {
-  uploadAvatarQueryParamsSchema,
-  uploadAvatar200Schema,
-  uploadAvatar400Schema,
-  uploadAvatar401Schema,
-  uploadAvatar403Schema,
-  uploadAvatarMutationRequestSchema,
-  uploadAvatarMutationResponseSchema,
-} from './schemas/uploadAvatarSchema.js'
 export { verifiedAccountSchema } from './schemas/verifiedAccountSchema.js'
