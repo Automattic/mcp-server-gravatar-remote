@@ -14,10 +14,18 @@ import {
 import { z } from "zod";
 
 // Output schemas for MCP tools (cast to restore .shape access)
-export const mcpProfileOutputSchema = profileSchema as z.ZodObject<any>;
+// NOTE: .passthrough() allows extra properties when the API evolves ahead of the OpenAPI spec
+// Without this, new API fields cause validation errors until the spec is updated
+// Trade-off: less strict validation but more resilient to API changes
+export const mcpProfileOutputSchema = (profileSchema as z.ZodObject<any>).passthrough();
 
 export const mcpInterestsOutputSchema = z.object({
-  interests: z.array(interestSchema as z.ZodObject<any>),
+  interests: z.array(
+    // NOTE: .passthrough() allows extra properties when the API evolves ahead of the OpenAPI spec
+    // Without this, new API fields cause validation errors until the spec is updated
+    // Trade-off: less strict validation but more resilient to API changes
+    (interestSchema as z.ZodObject<any>).passthrough(),
+  ),
 });
 
 // Input schemas for MCP tools (cast to restore .shape access)
