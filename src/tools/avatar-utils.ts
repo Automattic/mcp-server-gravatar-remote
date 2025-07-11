@@ -1,10 +1,28 @@
 /**
  * Shared utilities for avatar API calls
  * Uses direct HTTP calls to Gravatar avatar endpoints
- * Following STDIO implementation pattern
  */
 
 import { config } from "../config/server-config.js";
+
+/**
+ * Convert ArrayBuffer to base64 string without stack overflow
+ * Handles large binary data by processing in chunks
+ */
+export function arrayBufferToBase64(arrayBuffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(arrayBuffer);
+
+  // Process in chunks to avoid "Maximum call stack size exceeded" error
+  const CHUNK_SIZE = 8192;
+  let binary = "";
+
+  for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+    const chunk = bytes.slice(i, i + CHUNK_SIZE);
+    binary += String.fromCharCode.apply(null, Array.from(chunk));
+  }
+
+  return btoa(binary);
+}
 
 export interface AvatarParams {
   avatarIdentifier: string;
@@ -15,7 +33,7 @@ export interface AvatarParams {
 }
 
 export interface AvatarResult {
-  buffer: Uint8Array;
+  base64Data: string;
   mimeType: string;
 }
 
@@ -36,7 +54,6 @@ function detectMimeType(response: Response): string {
 
 /**
  * Fetch avatar image by identifier
- * Following STDIO implementation pattern
  */
 export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   // Build avatar URL
@@ -98,12 +115,12 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   // Detect MIME type from response headers
   const mimeType = detectMimeType(response);
 
-  // Convert the response to a buffer
+  // Convert the response to base64
   const arrayBuffer = await response.arrayBuffer();
-  const buffer = new Uint8Array(arrayBuffer);
+  const base64Data = arrayBufferToBase64(arrayBuffer);
 
   return {
-    buffer,
+    base64Data,
     mimeType,
   };
 }
