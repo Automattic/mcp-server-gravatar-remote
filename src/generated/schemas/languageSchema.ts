@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Language } from '../models/Language.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -17,4 +15,4 @@ export const languageSchema = z
     is_primary: z.boolean().describe("Whether the language is the user's primary language."),
     order: z.number().int().describe("The order of the language in the user's profile."),
   })
-  .describe('The languages the user knows. This is only provided in authenticated API requests.') as unknown as ToZod<Language>
+  .describe('The languages the user knows. This is only provided in authenticated API requests.')

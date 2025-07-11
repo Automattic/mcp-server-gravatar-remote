@@ -20,6 +20,12 @@ vi.mock("../../src/config/server-config.js", () => ({
     "User-Agent": "test-user-agent/1.0",
     Accept: "application/json",
   }),
+  getRequestConfig: vi.fn().mockReturnValue({
+    headers: {
+      "User-Agent": "test-user-agent/1.0",
+      Accept: "application/json",
+    },
+  }),
 }));
 
 // Mock the utils module

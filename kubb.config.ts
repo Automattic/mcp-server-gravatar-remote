@@ -40,9 +40,18 @@ export default defineConfig({
       output: {
         path: "./schemas",
       },
-      typed: true,
+      typed: false,
       dateType: "stringOffset",
       unknownType: "unknown",
+      // Skip uploadAvatar schema - Kubb generates invalid code: z.boolean().default({})
+      // The OpenAPI spec defines a nullable boolean with default null, but Kubb generates
+      // an empty object {} as the default for a boolean field, causing TS2769
+      exclude: [
+        {
+          type: "operationId",
+          pattern: "uploadAvatar",
+        },
+      ],
     }),
   ],
 });

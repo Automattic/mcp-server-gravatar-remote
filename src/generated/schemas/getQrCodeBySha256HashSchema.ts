@@ -3,21 +3,12 @@
  * Do not edit manually.
  */
 
-import type {
-  GetQrCodeBySha256HashPathParams,
-  GetQrCodeBySha256HashQueryParams,
-  GetQrCodeBySha256Hash200,
-  GetQrCodeBySha256Hash429,
-  GetQrCodeBySha256Hash500,
-  GetQrCodeBySha256HashQueryResponse,
-} from '../models/GetQrCodeBySha256Hash.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
 export const getQrCodeBySha256HashPathParamsSchema = z.object({
   sha256_hash: z.string().describe('The SHA256 hash of the email address or profile URL slug.'),
-}) as unknown as ToZod<GetQrCodeBySha256HashPathParams>
+})
 
 export const getQrCodeBySha256HashQueryParamsSchema = z
   .object({
@@ -27,23 +18,21 @@ export const getQrCodeBySha256HashQueryParamsSchema = z
     utm_campaign: z.string().describe('The campaign of the UTM parameters. Appended to the URL in the QR code.').optional(),
     type: z.string().describe("The type of center icon to display ('user' for avatar, 'gravatar' for logo, 'none' for no icon).").optional(),
   })
-  .optional() as unknown as ToZod<GetQrCodeBySha256HashQueryParams>
+  .optional()
 
 /**
  * @description Successful response
  */
-export const getQrCodeBySha256Hash200Schema = z.instanceof(File) as unknown as ToZod<GetQrCodeBySha256Hash200>
+export const getQrCodeBySha256Hash200Schema = z.instanceof(File)
 
 /**
  * @description Rate Limit Exceeded
  */
-export const getQrCodeBySha256Hash429Schema = z
-  .lazy(() => errorSchema)
-  .describe('An error response from the API.') as unknown as ToZod<GetQrCodeBySha256Hash429>
+export const getQrCodeBySha256Hash429Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Internal server error
  */
-export const getQrCodeBySha256Hash500Schema = z.unknown() as unknown as ToZod<GetQrCodeBySha256Hash500>
+export const getQrCodeBySha256Hash500Schema = z.unknown()
 
-export const getQrCodeBySha256HashQueryResponseSchema = z.lazy(() => getQrCodeBySha256Hash200Schema) as unknown as ToZod<GetQrCodeBySha256HashQueryResponse>
+export const getQrCodeBySha256HashQueryResponseSchema = z.lazy(() => getQrCodeBySha256Hash200Schema)

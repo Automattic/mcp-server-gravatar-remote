@@ -3,16 +3,6 @@
  * Do not edit manually.
  */
 
-import type {
-  SearchProfilesByVerifiedAccountQueryParams,
-  SearchProfilesByVerifiedAccount200,
-  SearchProfilesByVerifiedAccount400,
-  SearchProfilesByVerifiedAccount401,
-  SearchProfilesByVerifiedAccount429,
-  SearchProfilesByVerifiedAccount500,
-  SearchProfilesByVerifiedAccountQueryResponse,
-} from '../models/SearchProfilesByVerifiedAccount.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { profileSchema } from './profileSchema.js'
 import { z } from 'zod'
@@ -22,7 +12,7 @@ export const searchProfilesByVerifiedAccountQueryParamsSchema = z.object({
   service: z.string().describe("The service to limit search to (e.g., 'github', 'twitter'). See `/verified-accounts/services` for supported IDs.").optional(),
   page: z.coerce.number().int().min(1).default(1).describe('Page number of results to retrieve.'),
   per_page: z.coerce.number().int().min(1).max(50).default(20).describe('Number of results per page. Defaults to 20, maximum 50.'),
-}) as unknown as ToZod<SearchProfilesByVerifiedAccountQueryParams>
+})
 
 /**
  * @description List of matching profiles
@@ -30,34 +20,26 @@ export const searchProfilesByVerifiedAccountQueryParamsSchema = z.object({
 export const searchProfilesByVerifiedAccount200Schema = z.object({
   profiles: z.array(z.lazy(() => profileSchema).describe("A user's profile information.")),
   total_pages: z.number().int().describe('Total number of pages available.'),
-}) as unknown as ToZod<SearchProfilesByVerifiedAccount200>
+})
 
 /**
  * @description Missing or invalid parameters
  */
-export const searchProfilesByVerifiedAccount400Schema = z
-  .lazy(() => errorSchema)
-  .describe('An error response from the API.') as unknown as ToZod<SearchProfilesByVerifiedAccount400>
+export const searchProfilesByVerifiedAccount400Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Not Authorized
  */
-export const searchProfilesByVerifiedAccount401Schema = z
-  .lazy(() => errorSchema)
-  .describe('An error response from the API.') as unknown as ToZod<SearchProfilesByVerifiedAccount401>
+export const searchProfilesByVerifiedAccount401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Rate Limit Exceeded
  */
-export const searchProfilesByVerifiedAccount429Schema = z
-  .lazy(() => errorSchema)
-  .describe('An error response from the API.') as unknown as ToZod<SearchProfilesByVerifiedAccount429>
+export const searchProfilesByVerifiedAccount429Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Internal server error
  */
-export const searchProfilesByVerifiedAccount500Schema = z.unknown() as unknown as ToZod<SearchProfilesByVerifiedAccount500>
+export const searchProfilesByVerifiedAccount500Schema = z.unknown()
 
-export const searchProfilesByVerifiedAccountQueryResponseSchema = z.lazy(
-  () => searchProfilesByVerifiedAccount200Schema,
-) as unknown as ToZod<SearchProfilesByVerifiedAccountQueryResponse>
+export const searchProfilesByVerifiedAccountQueryResponseSchema = z.lazy(() => searchProfilesByVerifiedAccount200Schema)

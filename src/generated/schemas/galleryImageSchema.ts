@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { GalleryImage } from '../models/GalleryImage.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -15,4 +13,4 @@ export const galleryImageSchema = z
     url: z.string().url().describe('The URL to the image.'),
     alt_text: z.string().describe('The image alt text.').optional(),
   })
-  .describe('A gallery image a user has uploaded.') as unknown as ToZod<GalleryImage>
+  .describe('A gallery image a user has uploaded.')

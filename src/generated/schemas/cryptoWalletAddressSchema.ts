@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { CryptoWalletAddress } from '../models/CryptoWalletAddress.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -15,4 +13,4 @@ export const cryptoWalletAddressSchema = z
     label: z.string().describe('The label for the crypto currency.'),
     address: z.string().describe('The wallet address for the crypto currency.'),
   })
-  .describe('A crypto currency wallet address the user accepts.') as unknown as ToZod<CryptoWalletAddress>
+  .describe('A crypto currency wallet address the user accepts.')
