@@ -12,5 +12,6 @@ export const interestSchema = z
   .object({
     id: z.number().int().describe('The unique identifier for the interest.'),
     name: z.string().describe('The name of the interest as originally defined (most often in English).'),
+    slug: z.string().describe('The slug representing the interest by combining id and its normalized name.'),
   })
   .describe('An interest the user has added to their profile.')

@@ -17,4 +17,9 @@ export type Interest = {
    * @type string
    */
   name: string
+  /**
+   * @description The slug representing the interest by combining id and its normalized name.
+   * @type string
+   */
+  slug: string
 }
