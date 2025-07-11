@@ -3,22 +3,9 @@
  * Uses the generated Gravatar API client
  */
 
-import { ExperimentalApi, Configuration } from "../generated/gravatar-api/index.js";
-import { getApiHeaders } from "../config/server-config.js";
+import { getProfileInferredInterestsById } from "../generated/clients/index.js";
+import { getRequestConfig } from "../config/server-config.js";
 import { mapHttpError } from "../common/utils.js";
-
-/**
- * Create a configured ExperimentalApi instance
- * @returns Configured ExperimentalApi instance
- */
-export function createExperimentalApi(): ExperimentalApi {
-  const configuration = new Configuration({
-    fetchApi: fetch,
-    headers: getApiHeaders(),
-  });
-
-  return new ExperimentalApi(configuration);
-}
 
 /**
  * Get inferred interests by identifier with error handling
@@ -26,12 +13,8 @@ export function createExperimentalApi(): ExperimentalApi {
  * @returns Interests data or throws error with meaningful message
  */
 export async function getInferredInterests(identifier: string) {
-  const api = createExperimentalApi();
-
   try {
-    const response = await api.getProfileInferredInterestsById({
-      profileIdentifier: identifier,
-    });
+    const response = await getProfileInferredInterestsById(identifier, getRequestConfig());
     return response;
   } catch (error: any) {
     // Handle HTTP errors with meaningful messages

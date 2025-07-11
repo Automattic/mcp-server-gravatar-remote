@@ -10,8 +10,9 @@ import { VERSION } from "../common/version.js";
  * Handles environment variables and API endpoints
  */
 export const config = {
-  // Gravatar API endpoint
+  // Gravatar API endpoints
   avatarApiBase: "https://gravatar.com/avatar",
+  restApiBase: "https://api.gravatar.com/v3",
 
   // User agent for API requests
   userAgent: `Remote-Gravatar-MCP-Server/${VERSION}`,
@@ -39,5 +40,17 @@ export function getApiHeaders(): Record<string, string> {
     "User-Agent": config.userAgent,
     Accept: "application/json",
     "Content-Type": "application/json",
+  };
+}
+
+/**
+ * Get request configuration for Kubb client functions
+ * @returns RequestConfig object for Kubb API calls
+ */
+export function getRequestConfig() {
+  return {
+    baseURL: config.restApiBase,
+    headers: getApiHeaders(),
+    timeout: config.requestTimeout,
   };
 }
