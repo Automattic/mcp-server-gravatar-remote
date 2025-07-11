@@ -63,7 +63,7 @@ vi.mock("../../src/tools/experimental-utils.js", () => ({
 
 vi.mock("../../src/tools/avatar-utils.js", () => ({
   fetchAvatar: vi.fn().mockResolvedValue({
-    buffer: new Uint8Array([1, 2, 3, 4]),
+    base64Data: "AQIDBA==",
     mimeType: "image/png",
   }),
   avatarParams: vi.fn().mockImplementation((identifier, ...args) => ({
@@ -273,6 +273,39 @@ describe("MCP Server Integration Tests", () => {
       expect(result.structuredContent.inferredInterests).toBeDefined();
       expect(Array.isArray(result.structuredContent.inferredInterests)).toBe(true);
       expect(result.structuredContent.inferredInterests.length).toBe(2);
+    });
+
+    it("should handle large avatar images without stack overflow", async () => {
+      // Mock fetchAvatar to return a large avatar (simulating 2048x2048 avatar)
+      // The API supports images up to 2048x2048, which can be 500KB-2MB+ as PNG
+      // This test would have caught the original bug in src/index.ts where large avatars
+      // caused "Maximum call stack size exceeded" when converting to base64
+      const { fetchAvatar } = await import("../../src/tools/avatar-utils.js");
+      const largeBase64Data = "A".repeat(666000); // Large base64 string (~500KB decoded)
+      (fetchAvatar as any).mockResolvedValueOnce({
+        base64Data: largeBase64Data,
+        mimeType: "image/png",
+      });
+
+      const registerToolCalls = (server.server.registerTool as any).mock.calls;
+      const avatarByIdCall = registerToolCalls.find((call: any) => call[0] === "get_avatar_by_id");
+      expect(avatarByIdCall).toBeDefined();
+
+      const [, , toolHandler] = avatarByIdCall;
+
+      // Execute the tool with maximum avatar size - should not throw stack overflow
+      const result = await toolHandler({
+        avatarIdentifier: "20e74a1399c883caeeba81b57007bcaa058940dcdffca01babfddbaefa5c3c4a",
+        size: 2048,
+      });
+
+      // Should handle large avatar without errors
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]).toBeDefined();
+      expect(result.content[0].type).toBe("image");
+      expect(result.content[0].data).toBe(largeBase64Data);
+      expect(result.content[0].mimeType).toBe("image/png");
     });
 
     it("should handle tool execution errors gracefully", async () => {

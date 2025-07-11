@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchAvatar, avatarParams, type AvatarParams } from "../../src/tools/avatar-utils.js";
+import {
+  fetchAvatar,
+  avatarParams,
+  arrayBufferToBase64,
+  type AvatarParams,
+} from "../../src/tools/avatar-utils.js";
 
 // Mock the config module
 vi.mock("../../src/config/server-config.js", () => ({
@@ -52,7 +57,7 @@ describe("Avatar Utils", () => {
       });
 
       expect(result).toEqual({
-        buffer: new Uint8Array(mockImageBuffer),
+        base64Data: "iVBORw0KGgo=",
         mimeType: "image/png",
       });
     });
@@ -221,25 +226,6 @@ describe("Avatar Utils", () => {
         );
       }
     });
-
-    it("should convert ArrayBuffer to Uint8Array correctly", async () => {
-      const testData = new Uint8Array([1, 2, 3, 4, 5]);
-      const testBuffer = testData.buffer;
-
-      const mockResponse = {
-        ok: true,
-        headers: {
-          get: vi.fn().mockReturnValue("image/png"),
-        },
-        arrayBuffer: vi.fn().mockResolvedValue(testBuffer),
-      };
-      mockFetch.mockResolvedValue(mockResponse);
-
-      const result = await fetchAvatar({ avatarIdentifier: mockIdentifier });
-
-      expect(result.buffer).toBeInstanceOf(Uint8Array);
-      expect(Array.from(result.buffer)).toEqual([1, 2, 3, 4, 5]);
-    });
   });
 
   describe("avatarParams", () => {
@@ -292,6 +278,47 @@ describe("Avatar Utils", () => {
         avatarIdentifier: testIdentifier,
         forceDefault: false,
       });
+    });
+  });
+
+  describe("arrayBufferToBase64", () => {
+    it("should convert small ArrayBuffer to base64", () => {
+      const buffer = new ArrayBuffer(4);
+      const view = new Uint8Array(buffer);
+      view[0] = 1;
+      view[1] = 2;
+      view[2] = 3;
+      view[3] = 4;
+
+      const result = arrayBufferToBase64(buffer);
+
+      expect(result).toBe("AQIDBA==");
+    });
+
+    it("should handle large ArrayBuffer without stack overflow", () => {
+      // Create a large buffer that would cause stack overflow with the old approach
+      const largeBuffer = new ArrayBuffer(100000);
+      const view = new Uint8Array(largeBuffer);
+
+      // Fill with some pattern
+      for (let i = 0; i < largeBuffer.byteLength; i++) {
+        view[i] = i % 256;
+      }
+
+      const result = arrayBufferToBase64(largeBuffer);
+
+      // Should not throw and should return a valid base64 string
+      expect(typeof result).toBe("string");
+      expect(result.length).toBeGreaterThan(0);
+      // Base64 should be roughly 4/3 the size of the original
+      expect(result.length).toBeGreaterThan(((100000 * 4) / 3) * 0.9);
+    });
+
+    it("should handle empty ArrayBuffer", () => {
+      const emptyBuffer = new ArrayBuffer(0);
+      const result = arrayBufferToBase64(emptyBuffer);
+
+      expect(result).toBe("");
     });
   });
 });
