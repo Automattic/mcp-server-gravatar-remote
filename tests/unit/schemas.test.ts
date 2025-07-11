@@ -6,39 +6,40 @@ describe("MCP Schema Integration Tests", () => {
       const {
         mcpProfileOutputSchema,
         mcpInterestsOutputSchema,
-        mcpProfileInputSchema,
-        mcpEmailInputSchema,
+        mcpProfileInputShape,
+        mcpEmailInputShape,
       } = await import("../../src/schemas/mcp-schemas.js");
 
       // Test that schemas are properly structured for MCP tool registration
       expect(mcpProfileOutputSchema.shape).toBeDefined();
       expect(mcpInterestsOutputSchema.shape).toBeDefined();
-      expect(mcpProfileInputSchema.shape).toBeDefined();
-      expect(mcpEmailInputSchema.shape).toBeDefined();
+      expect(mcpProfileInputShape).toBeDefined();
+      expect(mcpEmailInputShape).toBeDefined();
 
-      // Test that schemas can validate data
-      const validEmail = { email: "test@example.com" };
-      const validProfile = { profileIdentifier: "test-id" };
+      // Shapes contain the individual field validators
+      expect(mcpEmailInputShape.email).toBeDefined();
+      expect(mcpProfileInputShape.profileIdentifier).toBeDefined();
 
-      expect(mcpEmailInputSchema.safeParse(validEmail).success).toBe(true);
-      expect(mcpProfileInputSchema.safeParse(validProfile).success).toBe(true);
+      // Test that the field validators work
+      expect(mcpEmailInputShape.email.safeParse("test@example.com").success).toBe(true);
+      expect(mcpProfileInputShape.profileIdentifier.safeParse("test-id").success).toBe(true);
     });
 
     it("should handle schema validation in tool context", async () => {
-      const { mcpEmailInputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { mcpEmailInputShape } = await import("../../src/schemas/mcp-schemas.js");
 
       // Test email validation that would be used by MCP tools
       const validEmail = "test@example.com";
       const invalidEmail = "not-an-email";
 
-      const validResult = mcpEmailInputSchema.safeParse({ email: validEmail });
-      const invalidResult = mcpEmailInputSchema.safeParse({ email: invalidEmail });
+      const validResult = mcpEmailInputShape.email.safeParse(validEmail);
+      const invalidResult = mcpEmailInputShape.email.safeParse(invalidEmail);
 
       expect(validResult.success).toBe(true);
       expect(invalidResult.success).toBe(false);
 
       if (validResult.success) {
-        expect(validResult.data.email).toBe(validEmail);
+        expect(validResult.data).toBe(validEmail);
       }
 
       if (!invalidResult.success) {

@@ -270,9 +270,9 @@ describe("MCP Server Integration Tests", () => {
       expect(result.content[0]).toBeDefined();
       expect(result.content[0].type).toBe("text");
       expect(result.structuredContent).toBeDefined();
-      expect(result.structuredContent.inferredInterests).toBeDefined();
-      expect(Array.isArray(result.structuredContent.inferredInterests)).toBe(true);
-      expect(result.structuredContent.inferredInterests.length).toBe(2);
+      expect(result.structuredContent.interests).toBeDefined();
+      expect(Array.isArray(result.structuredContent.interests)).toBe(true);
+      expect(result.structuredContent.interests.length).toBe(2);
     });
 
     it("should handle large avatar images without stack overflow", async () => {
