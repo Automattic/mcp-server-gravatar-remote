@@ -2,15 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getInferredInterests } from "../../src/tools/experimental-utils.js";
 
 // Mock the generated API module
-vi.mock("../../src/generated/gravatar-api/index.js", () => {
+vi.mock("../../src/generated/clients/index.js", () => {
   const mockGetProfileInferredInterestsById = vi.fn();
-  const mockConfiguration = vi.fn();
 
   return {
-    ExperimentalApi: vi.fn(() => ({
-      getProfileInferredInterestsById: mockGetProfileInferredInterestsById,
-    })),
-    Configuration: mockConfiguration,
+    getProfileInferredInterestsById: mockGetProfileInferredInterestsById,
   };
 });
 
@@ -52,27 +48,26 @@ describe("Experimental Utils", () => {
     ];
 
     it("should return interests data on successful API call", async () => {
-      const { ExperimentalApi } = await import("../../src/generated/gravatar-api/index.js");
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
 
-      const mockInstance = new (ExperimentalApi as any)();
-      const mockGetProfileInferredInterestsById = mockInstance.getProfileInferredInterestsById;
-
-      mockGetProfileInferredInterestsById.mockResolvedValue(mockInterestsData);
+      (getProfileInferredInterestsById as any).mockResolvedValue(mockInterestsData);
 
       const result = await getInferredInterests(testIdentifier);
 
-      expect(mockGetProfileInferredInterestsById).toHaveBeenCalledWith({
-        profileIdentifier: testIdentifier,
-      });
+      expect(getProfileInferredInterestsById).toHaveBeenCalledWith(
+        testIdentifier,
+        expect.any(Object),
+      );
       expect(result).toEqual(mockInterestsData);
     });
 
     it("should handle HTTP errors", async () => {
-      const { ExperimentalApi } = await import("../../src/generated/gravatar-api/index.js");
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
       const { mapHttpError } = await import("../../src/common/utils.js");
-
-      const mockInstance = new (ExperimentalApi as any)();
-      const mockGetProfileInferredInterestsById = mockInstance.getProfileInferredInterestsById;
 
       const mockError = {
         response: {
@@ -82,7 +77,7 @@ describe("Experimental Utils", () => {
       };
       const mappedErrorMessage = "No profile found for identifier: test-profile-id";
 
-      mockGetProfileInferredInterestsById.mockRejectedValue(mockError);
+      (getProfileInferredInterestsById as any).mockRejectedValue(mockError);
       (mapHttpError as any).mockReturnValue(mappedErrorMessage);
 
       await expect(getInferredInterests(testIdentifier)).rejects.toThrow(mappedErrorMessage);
@@ -91,13 +86,12 @@ describe("Experimental Utils", () => {
     });
 
     it("should handle network errors", async () => {
-      const { ExperimentalApi } = await import("../../src/generated/gravatar-api/index.js");
-
-      const mockInstance = new (ExperimentalApi as any)();
-      const mockGetProfileInferredInterestsById = mockInstance.getProfileInferredInterestsById;
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
 
       const networkError = new Error("Network connection failed");
-      mockGetProfileInferredInterestsById.mockRejectedValue(networkError);
+      (getProfileInferredInterestsById as any).mockRejectedValue(networkError);
 
       await expect(getInferredInterests(testIdentifier)).rejects.toThrow(
         "Network error while fetching interests: Network connection failed",
