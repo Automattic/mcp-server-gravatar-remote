@@ -3,16 +3,6 @@
  * Do not edit manually.
  */
 
-import type {
-  UploadAvatarQueryParams,
-  UploadAvatar200,
-  UploadAvatar400,
-  UploadAvatar401,
-  UploadAvatar403,
-  UploadAvatarMutationRequest,
-  UploadAvatarMutationResponse,
-} from '../models/UploadAvatar.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { avatarSchema } from './avatarSchema.js'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
@@ -29,32 +19,30 @@ export const uploadAvatarQueryParamsSchema = z.object({
       "Determines if the uploaded image should be set as the avatar for the email. If not passed, the image is only selected as the email's avatar if no previous avatar has been set. Accepts '1'/'true' to always set the avatar or '0'/'false' to never set the avatar.",
     )
     .nullable(),
-}) as unknown as ToZod<UploadAvatarQueryParams>
+})
 
 /**
  * @description Avatar uploaded successfully
  */
-export const uploadAvatar200Schema = z
-  .lazy(() => avatarSchema)
-  .describe('An avatar that the user has already uploaded to their Gravatar account.') as unknown as ToZod<UploadAvatar200>
+export const uploadAvatar200Schema = z.lazy(() => avatarSchema).describe('An avatar that the user has already uploaded to their Gravatar account.')
 
 /**
  * @description Invalid request
  */
-export const uploadAvatar400Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UploadAvatar400>
+export const uploadAvatar400Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Not Authorized
  */
-export const uploadAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UploadAvatar401>
+export const uploadAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const uploadAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UploadAvatar403>
+export const uploadAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 export const uploadAvatarMutationRequestSchema = z.object({
   image: z.instanceof(File).describe('The avatar image file'),
-}) as unknown as ToZod<UploadAvatarMutationRequest>
+})
 
-export const uploadAvatarMutationResponseSchema = z.lazy(() => uploadAvatar200Schema) as unknown as ToZod<UploadAvatarMutationResponse>
+export const uploadAvatarMutationResponseSchema = z.lazy(() => uploadAvatar200Schema)

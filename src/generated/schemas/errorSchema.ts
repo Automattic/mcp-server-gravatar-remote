@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Error } from '../models/Error.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -15,4 +13,4 @@ export const errorSchema = z
     error: z.string().describe('The error message'),
     code: z.string().describe('The error code for the error message').optional(),
   })
-  .describe('An error response from the API.') as unknown as ToZod<Error>
+  .describe('An error response from the API.')

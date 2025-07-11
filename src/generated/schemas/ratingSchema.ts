@@ -3,11 +3,9 @@
  * Do not edit manually.
  */
 
-import type { Rating } from '../models/Rating.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
  * @description Rating associated with the image.
  */
-export const ratingSchema = z.enum(['G', 'PG', 'R', 'X']).describe('Rating associated with the image.') as unknown as ToZod<Rating>
+export const ratingSchema = z.enum(['G', 'PG', 'R', 'X']).describe('Rating associated with the image.')

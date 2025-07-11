@@ -3,16 +3,6 @@
  * Do not edit manually.
  */
 
-import type {
-  UpdateAvatarPathParams,
-  UpdateAvatar200,
-  UpdateAvatar401,
-  UpdateAvatar403,
-  UpdateAvatar404,
-  UpdateAvatarMutationRequest,
-  UpdateAvatarMutationResponse,
-} from '../models/UpdateAvatar.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { avatarSchema } from './avatarSchema.js'
 import { errorSchema } from './errorSchema.js'
 import { ratingSchema } from './ratingSchema.js'
@@ -20,29 +10,27 @@ import { z } from 'zod'
 
 export const updateAvatarPathParamsSchema = z.object({
   imageHash: z.string().describe('The hash of the avatar to update.'),
-}) as unknown as ToZod<UpdateAvatarPathParams>
+})
 
 /**
  * @description Avatar updated successfully
  */
-export const updateAvatar200Schema = z
-  .lazy(() => avatarSchema)
-  .describe('An avatar that the user has already uploaded to their Gravatar account.') as unknown as ToZod<UpdateAvatar200>
+export const updateAvatar200Schema = z.lazy(() => avatarSchema).describe('An avatar that the user has already uploaded to their Gravatar account.')
 
 /**
  * @description Not Authorized
  */
-export const updateAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateAvatar401>
+export const updateAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const updateAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateAvatar403>
+export const updateAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Avatar not found
  */
-export const updateAvatar404Schema = z.unknown() as unknown as ToZod<UpdateAvatar404>
+export const updateAvatar404Schema = z.unknown()
 
 export const updateAvatarMutationRequestSchema = z
   .object({
@@ -52,8 +40,6 @@ export const updateAvatarMutationRequestSchema = z
       .optional(),
     alt_text: z.string().describe('Alternative text description of the image.').optional(),
   })
-  .describe(
-    'The avatar data to update. Partial updates are supported, so only the provided fields will be updated.',
-  ) as unknown as ToZod<UpdateAvatarMutationRequest>
+  .describe('The avatar data to update. Partial updates are supported, so only the provided fields will be updated.')
 
-export const updateAvatarMutationResponseSchema = z.lazy(() => updateAvatar200Schema) as unknown as ToZod<UpdateAvatarMutationResponse>
+export const updateAvatarMutationResponseSchema = z.lazy(() => updateAvatar200Schema)

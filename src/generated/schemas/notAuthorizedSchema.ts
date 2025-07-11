@@ -3,9 +3,7 @@
  * Do not edit manually.
  */
 
-import type { NotAuthorized } from '../models/NotAuthorized.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
-export const notAuthorizedSchema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<NotAuthorized>
+export const notAuthorizedSchema = z.lazy(() => errorSchema).describe('An error response from the API.')

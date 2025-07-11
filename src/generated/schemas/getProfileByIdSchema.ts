@@ -3,41 +3,32 @@
  * Do not edit manually.
  */
 
-import type {
-  GetProfileByIdPathParams,
-  GetProfileById200,
-  GetProfileById404,
-  GetProfileById429,
-  GetProfileById500,
-  GetProfileByIdQueryResponse,
-} from '../models/GetProfileById.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { profileSchema } from './profileSchema.js'
 import { z } from 'zod'
 
 export const getProfileByIdPathParamsSchema = z.object({
   profileIdentifier: z.string().describe('This can either be an SHA256 hash of an email address or profile URL slug.'),
-}) as unknown as ToZod<GetProfileByIdPathParams>
+})
 
 /**
  * @description Successful response
  */
-export const getProfileById200Schema = z.lazy(() => profileSchema).describe("A user's profile information.") as unknown as ToZod<GetProfileById200>
+export const getProfileById200Schema = z.lazy(() => profileSchema).describe("A user's profile information.")
 
 /**
  * @description Profile not found
  */
-export const getProfileById404Schema = z.unknown() as unknown as ToZod<GetProfileById404>
+export const getProfileById404Schema = z.unknown()
 
 /**
  * @description Rate Limit Exceeded
  */
-export const getProfileById429Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<GetProfileById429>
+export const getProfileById429Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Internal server error
  */
-export const getProfileById500Schema = z.unknown() as unknown as ToZod<GetProfileById500>
+export const getProfileById500Schema = z.unknown()
 
-export const getProfileByIdQueryResponseSchema = z.lazy(() => getProfileById200Schema) as unknown as ToZod<GetProfileByIdQueryResponse>
+export const getProfileByIdQueryResponseSchema = z.lazy(() => getProfileById200Schema)

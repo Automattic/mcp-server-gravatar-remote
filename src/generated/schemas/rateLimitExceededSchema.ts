@@ -3,9 +3,7 @@
  * Do not edit manually.
  */
 
-import type { RateLimitExceeded } from '../models/RateLimitExceeded.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
-export const rateLimitExceededSchema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<RateLimitExceeded>
+export const rateLimitExceededSchema = z.lazy(() => errorSchema).describe('An error response from the API.')

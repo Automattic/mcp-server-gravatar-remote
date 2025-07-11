@@ -3,42 +3,33 @@
  * Do not edit manually.
  */
 
-import type {
-  SetEmailAvatarPathParams,
-  SetEmailAvatar200,
-  SetEmailAvatar401,
-  SetEmailAvatar403,
-  SetEmailAvatarMutationRequest,
-  SetEmailAvatarMutationResponse,
-} from '../models/SetEmailAvatar.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
 export const setEmailAvatarPathParamsSchema = z.object({
   imageId: z.string().describe('Image ID of the avatar to set as the provided hashed email avatar.'),
-}) as unknown as ToZod<SetEmailAvatarPathParams>
+})
 
 /**
  * @description Avatar successfully set
  */
-export const setEmailAvatar200Schema = z.unknown() as unknown as ToZod<SetEmailAvatar200>
+export const setEmailAvatar200Schema = z.unknown()
 
 /**
  * @description Not Authorized
  */
-export const setEmailAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<SetEmailAvatar401>
+export const setEmailAvatar401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const setEmailAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<SetEmailAvatar403>
+export const setEmailAvatar403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Avatar selection details
  */
 export const setEmailAvatarMutationRequestSchema = z.object({
   email_hash: z.string().describe('The email SHA256 hash to set the avatar for.'),
-}) as unknown as ToZod<SetEmailAvatarMutationRequest>
+})
 
-export const setEmailAvatarMutationResponseSchema = z.lazy(() => setEmailAvatar200Schema) as unknown as ToZod<SetEmailAvatarMutationResponse>
+export const setEmailAvatarMutationResponseSchema = z.lazy(() => setEmailAvatar200Schema)

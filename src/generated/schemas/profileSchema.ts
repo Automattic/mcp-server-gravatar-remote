@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Profile } from '../models/Profile.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { cryptoWalletAddressSchema } from './cryptoWalletAddressSchema.js'
 import { galleryImageSchema } from './galleryImageSchema.js'
 import { interestSchema } from './interestSchema.js'
@@ -115,4 +113,4 @@ export const profileSchema = z
       .describe("The visibility of the user's profile sections.")
       .optional(),
   })
-  .describe("A user's profile information.") as unknown as ToZod<Profile>
+  .describe("A user's profile information.")

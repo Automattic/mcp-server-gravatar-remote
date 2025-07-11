@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Link } from '../models/Link.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -15,4 +13,4 @@ export const linkSchema = z
     label: z.string().describe('The label for the link.'),
     url: z.string().url().describe('The URL to the link.'),
   })
-  .describe('A link the user has added to their profile.') as unknown as ToZod<Link>
+  .describe('A link the user has added to their profile.')

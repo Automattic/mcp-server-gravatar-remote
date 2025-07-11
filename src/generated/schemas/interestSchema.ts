@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Interest } from '../models/Interest.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -15,4 +13,4 @@ export const interestSchema = z
     id: z.number().int().describe('The unique identifier for the interest.'),
     name: z.string().describe('The name of the interest as originally defined (most often in English).'),
   })
-  .describe('An interest the user has added to their profile.') as unknown as ToZod<Interest>
+  .describe('An interest the user has added to their profile.')

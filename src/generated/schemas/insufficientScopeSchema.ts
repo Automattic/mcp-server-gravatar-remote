@@ -3,9 +3,7 @@
  * Do not edit manually.
  */
 
-import type { InsufficientScope } from '../models/InsufficientScope.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
-export const insufficientScopeSchema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<InsufficientScope>
+export const insufficientScopeSchema = z.lazy(() => errorSchema).describe('An error response from the API.')

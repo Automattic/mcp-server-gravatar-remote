@@ -3,35 +3,27 @@
  * Do not edit manually.
  */
 
-import type {
-  AssociatedEmailQueryParams,
-  AssociatedEmail200,
-  AssociatedEmail401,
-  AssociatedEmail403,
-  AssociatedEmailQueryResponse,
-} from '../models/AssociatedEmail.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { associatedResponseSchema } from './associatedResponseSchema.js'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
 
 export const associatedEmailQueryParamsSchema = z.object({
   email_hash: z.string().describe('The hash of the email address to check.'),
-}) as unknown as ToZod<AssociatedEmailQueryParams>
+})
 
 /**
  * @description The email is associated with the authenticated user
  */
-export const associatedEmail200Schema = z.lazy(() => associatedResponseSchema) as unknown as ToZod<AssociatedEmail200>
+export const associatedEmail200Schema = z.lazy(() => associatedResponseSchema)
 
 /**
  * @description Not Authorized
  */
-export const associatedEmail401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<AssociatedEmail401>
+export const associatedEmail401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const associatedEmail403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<AssociatedEmail403>
+export const associatedEmail403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
-export const associatedEmailQueryResponseSchema = z.lazy(() => associatedEmail200Schema) as unknown as ToZod<AssociatedEmailQueryResponse>
+export const associatedEmailQueryResponseSchema = z.lazy(() => associatedEmail200Schema)

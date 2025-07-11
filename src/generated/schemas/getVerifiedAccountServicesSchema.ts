@@ -3,12 +3,6 @@
  * Do not edit manually.
  */
 
-import type {
-  GetVerifiedAccountServices200,
-  GetVerifiedAccountServices500,
-  GetVerifiedAccountServicesQueryResponse,
-} from '../models/GetVerifiedAccountServices.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -23,13 +17,11 @@ export const getVerifiedAccountServices200Schema = z.object({
       }),
     )
     .describe('List of supported verified account services.'),
-}) as unknown as ToZod<GetVerifiedAccountServices200>
+})
 
 /**
  * @description Internal server error
  */
-export const getVerifiedAccountServices500Schema = z.unknown() as unknown as ToZod<GetVerifiedAccountServices500>
+export const getVerifiedAccountServices500Schema = z.unknown()
 
-export const getVerifiedAccountServicesQueryResponseSchema = z.lazy(
-  () => getVerifiedAccountServices200Schema,
-) as unknown as ToZod<GetVerifiedAccountServicesQueryResponse>
+export const getVerifiedAccountServicesQueryResponseSchema = z.lazy(() => getVerifiedAccountServices200Schema)

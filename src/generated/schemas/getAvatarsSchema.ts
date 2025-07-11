@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { GetAvatarsQueryParams, GetAvatars200, GetAvatars401, GetAvatars403, GetAvatarsQueryResponse } from '../models/GetAvatars.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { avatarSchema } from './avatarSchema.js'
 import { errorSchema } from './errorSchema.js'
 import { z } from 'zod'
@@ -16,23 +14,21 @@ export const getAvatarsQueryParamsSchema = z.object({
     .describe(
       "The SHA256 hash of the email address used to determine which avatar is selected. The 'selected' attribute in the avatar list will be set to 'true' for the avatar associated with this email.",
     ),
-}) as unknown as ToZod<GetAvatarsQueryParams>
+})
 
 /**
  * @description Successful retrieval of avatars
  */
-export const getAvatars200Schema = z.array(
-  z.lazy(() => avatarSchema).describe('An avatar that the user has already uploaded to their Gravatar account.'),
-) as unknown as ToZod<GetAvatars200>
+export const getAvatars200Schema = z.array(z.lazy(() => avatarSchema).describe('An avatar that the user has already uploaded to their Gravatar account.'))
 
 /**
  * @description Not Authorized
  */
-export const getAvatars401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<GetAvatars401>
+export const getAvatars401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const getAvatars403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<GetAvatars403>
+export const getAvatars403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
-export const getAvatarsQueryResponseSchema = z.lazy(() => getAvatars200Schema) as unknown as ToZod<GetAvatarsQueryResponse>
+export const getAvatarsQueryResponseSchema = z.lazy(() => getAvatars200Schema)

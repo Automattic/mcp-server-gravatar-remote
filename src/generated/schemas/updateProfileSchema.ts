@@ -3,16 +3,6 @@
  * Do not edit manually.
  */
 
-import type {
-  UpdateProfile200,
-  UpdateProfile400,
-  UpdateProfile401,
-  UpdateProfile403,
-  UpdateProfile404,
-  UpdateProfileMutationRequest,
-  UpdateProfileMutationResponse,
-} from '../models/UpdateProfile.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { errorSchema } from './errorSchema.js'
 import { profileSchema } from './profileSchema.js'
 import { z } from 'zod'
@@ -20,27 +10,27 @@ import { z } from 'zod'
 /**
  * @description Profile updated successfully
  */
-export const updateProfile200Schema = z.lazy(() => profileSchema).describe("A user's profile information.") as unknown as ToZod<UpdateProfile200>
+export const updateProfile200Schema = z.lazy(() => profileSchema).describe("A user's profile information.")
 
 /**
  * @description Invalid request
  */
-export const updateProfile400Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateProfile400>
+export const updateProfile400Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Not Authorized
  */
-export const updateProfile401Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateProfile401>
+export const updateProfile401Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Insufficient Scope
  */
-export const updateProfile403Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateProfile403>
+export const updateProfile403Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 /**
  * @description Profile is disabled
  */
-export const updateProfile404Schema = z.lazy(() => errorSchema).describe('An error response from the API.') as unknown as ToZod<UpdateProfile404>
+export const updateProfile404Schema = z.lazy(() => errorSchema).describe('An error response from the API.')
 
 export const updateProfileMutationRequestSchema = z
   .object({
@@ -57,8 +47,6 @@ export const updateProfileMutationRequestSchema = z
     contact_email: z.string().describe("The user's contact email address.").optional(),
     hidden_contact_info: z.boolean().describe("Whether the user's contact information is hidden on their profile.").optional(),
   })
-  .describe(
-    'The subset of data available for update. Field names match the ones in `Profile`. Only the provided fields will be updated.',
-  ) as unknown as ToZod<UpdateProfileMutationRequest>
+  .describe('The subset of data available for update. Field names match the ones in `Profile`. Only the provided fields will be updated.')
 
-export const updateProfileMutationResponseSchema = z.lazy(() => updateProfile200Schema) as unknown as ToZod<UpdateProfileMutationResponse>
+export const updateProfileMutationResponseSchema = z.lazy(() => updateProfile200Schema)

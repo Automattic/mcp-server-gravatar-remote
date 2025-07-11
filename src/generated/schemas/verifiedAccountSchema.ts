@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { VerifiedAccount } from '../models/VerifiedAccount.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -18,4 +16,4 @@ export const verifiedAccountSchema = z
     url: z.string().url().describe("The URL to the user's profile on the service."),
     is_hidden: z.boolean().describe("Whether the verified account is hidden from the user's profile."),
   })
-  .describe("A verified account on a user's profile.") as unknown as ToZod<VerifiedAccount>
+  .describe("A verified account on a user's profile.")

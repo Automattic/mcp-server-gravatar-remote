@@ -3,8 +3,6 @@
  * Do not edit manually.
  */
 
-import type { Avatar } from '../models/Avatar.js'
-import type { ToZod } from '@kubb/plugin-zod/utils'
 import { z } from 'zod'
 
 /**
@@ -19,4 +17,4 @@ export const avatarSchema = z
     selected: z.boolean().describe("Whether the image is currently selected as the provided selected email's avatar.").optional(),
     updated_date: z.string().datetime({ offset: true }).describe('Date and time when the image was last updated.'),
   })
-  .describe('An avatar that the user has already uploaded to their Gravatar account.') as unknown as ToZod<Avatar>
+  .describe('An avatar that the user has already uploaded to their Gravatar account.')
