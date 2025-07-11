@@ -6,7 +6,6 @@ import {
   mcpProfileOutputSchema,
   mcpInterestsOutputSchema,
   mcpProfileInputShape,
-  mcpInterestsInputShape,
   mcpEmailInputShape,
 } from "./schemas/mcp-schemas.js";
 
