@@ -40,7 +40,7 @@ export default defineConfig({
       output: {
         path: "./schemas",
       },
-      typed: true,
+      typed: false,
       dateType: "stringOffset",
       unknownType: "unknown",
     }),
