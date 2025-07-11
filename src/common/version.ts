@@ -2,4 +2,6 @@
  * Version information for Gravatar MCP server
  */
 
-export const VERSION = "0.1.0";
+import packageJson from "../../package.json";
+
+export const VERSION = packageJson.version;
