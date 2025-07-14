@@ -10,11 +10,12 @@ import { mapHttpError } from "../common/utils.js";
 /**
  * Get inferred interests by identifier with error handling
  * @param identifier - The profile identifier (email hash or profile ID)
+ * @param apiKey - Optional API key for authenticated requests
  * @returns Interests data or throws error with meaningful message
  */
-export async function getInferredInterests(identifier: string) {
+export async function getInferredInterests(identifier: string, apiKey?: string) {
   try {
-    const response = await getProfileInferredInterestsById(identifier, getRequestConfig());
+    const response = await getProfileInferredInterestsById(identifier, getRequestConfig(apiKey));
     return response;
   } catch (error: any) {
     // Handle HTTP errors with meaningful messages

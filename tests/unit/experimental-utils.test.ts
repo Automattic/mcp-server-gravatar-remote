@@ -63,6 +63,61 @@ describe("Experimental Utils", () => {
       expect(result).toEqual(mockInterestsData);
     });
 
+    it("should call getRequestConfig with API key when provided", async () => {
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileInferredInterestsById as any).mockResolvedValue(mockInterestsData);
+
+      const apiKey = "test-api-key-123";
+      const result = await getInferredInterests(testIdentifier, apiKey);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(apiKey);
+      expect(getProfileInferredInterestsById).toHaveBeenCalledWith(
+        testIdentifier,
+        expect.any(Object),
+      );
+      expect(result).toEqual(mockInterestsData);
+    });
+
+    it("should call getRequestConfig without API key when not provided", async () => {
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileInferredInterestsById as any).mockResolvedValue(mockInterestsData);
+
+      const result = await getInferredInterests(testIdentifier);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(undefined);
+      expect(getProfileInferredInterestsById).toHaveBeenCalledWith(
+        testIdentifier,
+        expect.any(Object),
+      );
+      expect(result).toEqual(mockInterestsData);
+    });
+
+    it("should call getRequestConfig with undefined when API key is undefined", async () => {
+      const { getProfileInferredInterestsById } = await import(
+        "../../src/generated/clients/index.js"
+      );
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileInferredInterestsById as any).mockResolvedValue(mockInterestsData);
+
+      const result = await getInferredInterests(testIdentifier, undefined);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(undefined);
+      expect(getProfileInferredInterestsById).toHaveBeenCalledWith(
+        testIdentifier,
+        expect.any(Object),
+      );
+      expect(result).toEqual(mockInterestsData);
+    });
+
     it("should handle HTTP errors", async () => {
       const { getProfileInferredInterestsById } = await import(
         "../../src/generated/clients/index.js"

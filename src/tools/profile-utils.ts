@@ -10,11 +10,12 @@ import { mapHttpError } from "../common/utils.js";
 /**
  * Get profile by identifier with error handling
  * @param identifier - The profile identifier (email hash or profile ID)
+ * @param apiKey - Optional API key for authenticated requests
  * @returns Profile data or throws error with meaningful message
  */
-export async function getProfile(identifier: string) {
+export async function getProfile(identifier: string, apiKey?: string) {
   try {
-    const response = await getProfileById(identifier, getRequestConfig());
+    const response = await getProfileById(identifier, getRequestConfig(apiKey));
     return response;
   } catch (error: any) {
     // Handle HTTP errors with meaningful messages

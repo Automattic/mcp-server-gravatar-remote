@@ -33,24 +33,32 @@ export function getServerInfo() {
 
 /**
  * Get API headers for Gravatar REST API requests
+ * @param apiKey - Optional API key for authenticated requests
  * @returns Headers object for fetch requests
  */
-export function getApiHeaders(): Record<string, string> {
-  return {
+export function getApiHeaders(apiKey?: string): Record<string, string> {
+  const headers: Record<string, string> = {
     "User-Agent": config.userAgent,
     Accept: "application/json",
     "Content-Type": "application/json",
   };
+
+  if (apiKey && apiKey.trim() !== "") {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  return headers;
 }
 
 /**
  * Get request configuration for Kubb client functions
+ * @param apiKey - Optional API key for authenticated requests
  * @returns RequestConfig object for Kubb API calls
  */
-export function getRequestConfig() {
+export function getRequestConfig(apiKey?: string) {
   return {
     baseURL: config.restApiBase,
-    headers: getApiHeaders(),
+    headers: getApiHeaders(apiKey),
     timeout: config.requestTimeout,
   };
 }
