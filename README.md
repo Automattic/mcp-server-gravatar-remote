@@ -222,6 +222,31 @@ When using email-based tools, you can provide any valid email format. The system
 2. Generate the appropriate hash for API requests
 3. Process the email securely without storing it
 
+## API Key Configuration (Optional)
+
+The server works without authentication, but you can optionally configure a Gravatar API key to access additional profile fields.
+
+### For Production Deployment
+
+Set the API key as a Cloudflare Workers secret:
+
+```bash
+npx wrangler secret put GRAVATAR_API_KEY
+```
+
+When prompted, enter your Gravatar API key. The key will be securely stored and automatically used by the deployed server.
+
+### For Local Development
+
+Create a `.dev.vars` file in the project root:
+
+```bash
+# .dev.vars
+GRAVATAR_API_KEY=your-api-key-here
+```
+
+This file is automatically loaded during local development and should not be committed to version control (it's already in `.gitignore`).
+
 ## Development
 
 ### Local Development

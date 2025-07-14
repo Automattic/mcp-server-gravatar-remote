@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from "vitest";
-import { config, getServerInfo, getApiHeaders } from "../../src/config/server-config.js";
+import {
+  config,
+  getServerInfo,
+  getApiHeaders,
+  getRequestConfig,
+} from "../../src/config/server-config.js";
 
 // Mock with obviously fake version to make it clear this is test data
 vi.mock("../../src/common/version.js", () => ({
@@ -82,9 +87,51 @@ describe("getApiHeaders", () => {
     expect(headers["Content-Type"]).toBe("application/json");
   });
 
-  it("should return all required headers", () => {
+  it("should return all required headers without API key", () => {
     const headers = getApiHeaders();
 
+    expect(headers).toEqual({
+      "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    });
+  });
+
+  it("should include Authorization header when API key is provided", () => {
+    const apiKey = "test-api-key-123";
+    const headers = getApiHeaders(apiKey);
+
+    expect(headers).toHaveProperty("Authorization");
+    expect(headers.Authorization).toBe(`Bearer ${apiKey}`);
+  });
+
+  it("should return all headers with API key", () => {
+    const apiKey = "test-api-key-123";
+    const headers = getApiHeaders(apiKey);
+
+    expect(headers).toEqual({
+      "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    });
+  });
+
+  it("should not include Authorization header when API key is undefined", () => {
+    const headers = getApiHeaders(undefined);
+
+    expect(headers).not.toHaveProperty("Authorization");
+    expect(headers).toEqual({
+      "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    });
+  });
+
+  it("should not include Authorization header when API key is empty string", () => {
+    const headers = getApiHeaders("");
+
+    expect(headers).not.toHaveProperty("Authorization");
     expect(headers).toEqual({
       "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
       Accept: "application/json",
@@ -121,6 +168,14 @@ describe("getApiHeaders", () => {
     // Content-Type should be valid MIME type
     expect(headers["Content-Type"]).toMatch(/^application\/json$/);
   });
+
+  it("should have proper Authorization header format when API key is provided", () => {
+    const apiKey = "test-api-key-123";
+    const headers = getApiHeaders(apiKey);
+
+    expect(headers.Authorization).toMatch(/^Bearer .+$/);
+    expect(headers.Authorization).toBe(`Bearer ${apiKey}`);
+  });
 });
 
 describe("configuration integration", () => {
@@ -146,5 +201,73 @@ describe("configuration integration", () => {
     // User agent should identify the service
     expect(config.userAgent).toContain("Gravatar");
     expect(config.userAgent).toContain("MCP");
+  });
+});
+
+describe("getRequestConfig", () => {
+  it("should return configuration with baseURL", () => {
+    const requestConfig = getRequestConfig();
+
+    expect(requestConfig).toHaveProperty("baseURL");
+    expect(requestConfig.baseURL).toBe("https://api.gravatar.com/v3");
+  });
+
+  it("should return configuration with timeout", () => {
+    const requestConfig = getRequestConfig();
+
+    expect(requestConfig).toHaveProperty("timeout");
+    expect(requestConfig.timeout).toBe(30000);
+  });
+
+  it("should return configuration with headers without API key", () => {
+    const requestConfig = getRequestConfig();
+
+    expect(requestConfig).toHaveProperty("headers");
+    expect(requestConfig.headers).toEqual({
+      "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    });
+  });
+
+  it("should return configuration with headers including API key", () => {
+    const apiKey = "test-api-key-123";
+    const requestConfig = getRequestConfig(apiKey);
+
+    expect(requestConfig).toHaveProperty("headers");
+    expect(requestConfig.headers).toEqual({
+      "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    });
+  });
+
+  it("should not include Authorization header when API key is undefined", () => {
+    const requestConfig = getRequestConfig(undefined);
+
+    expect(requestConfig.headers).not.toHaveProperty("Authorization");
+  });
+
+  it("should not include Authorization header when API key is empty string", () => {
+    const requestConfig = getRequestConfig("");
+
+    expect(requestConfig.headers).not.toHaveProperty("Authorization");
+  });
+
+  it("should return complete configuration object", () => {
+    const apiKey = "test-api-key-123";
+    const requestConfig = getRequestConfig(apiKey);
+
+    expect(requestConfig).toEqual({
+      baseURL: "https://api.gravatar.com/v3",
+      timeout: 30000,
+      headers: {
+        "User-Agent": "Remote-Gravatar-MCP-Server/99.99.99",
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
   });
 });

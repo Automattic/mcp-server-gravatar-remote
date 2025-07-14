@@ -9,8 +9,13 @@ import {
   mcpEmailInputShape,
 } from "./schemas/mcp-schemas.js";
 
+// Environment interface for Cloudflare Workers
+export interface Env {
+  GRAVATAR_API_KEY?: string;
+}
+
 // Define the MCP agent with Gravatar tools
-export class GravatarMcpServer extends McpAgent {
+export class GravatarMcpServer extends McpAgent<Env> {
   server = new McpServer(getServerInfo());
 
   async init() {
@@ -19,6 +24,9 @@ export class GravatarMcpServer extends McpAgent {
     const { getProfile } = await import("./tools/profile-utils.js");
     const { getInferredInterests } = await import("./tools/experimental-utils.js");
     const { fetchAvatar, avatarParams } = await import("./tools/avatar-utils.js");
+
+    // Get optional API key from environment
+    const apiKey = this.env?.GRAVATAR_API_KEY;
 
     // Register get_profile_by_email tool
     this.server.registerTool(
@@ -38,7 +46,7 @@ export class GravatarMcpServer extends McpAgent {
       async ({ email }) => {
         try {
           const identifier = await generateIdentifier(email);
-          const profile = await getProfile(identifier);
+          const profile = await getProfile(identifier, apiKey);
           return {
             content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
             structuredContent: { ...profile },
@@ -75,7 +83,7 @@ export class GravatarMcpServer extends McpAgent {
       },
       async ({ profileIdentifier }) => {
         try {
-          const profile = await getProfile(profileIdentifier);
+          const profile = await getProfile(profileIdentifier, apiKey);
           return {
             content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
             structuredContent: { ...profile },
@@ -113,7 +121,7 @@ export class GravatarMcpServer extends McpAgent {
       async ({ email }) => {
         try {
           const identifier = await generateIdentifier(email);
-          const interests = await getInferredInterests(identifier);
+          const interests = await getInferredInterests(identifier, apiKey);
           const structuredInterests = { interests };
 
           return {
@@ -157,7 +165,7 @@ export class GravatarMcpServer extends McpAgent {
       },
       async ({ profileIdentifier }) => {
         try {
-          const interests = await getInferredInterests(profileIdentifier);
+          const interests = await getInferredInterests(profileIdentifier, apiKey);
           const structuredInterests = { interests };
 
           return {

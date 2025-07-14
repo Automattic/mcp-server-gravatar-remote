@@ -55,6 +55,46 @@ describe("Profile Utils", () => {
       expect(result).toEqual(mockProfileData);
     });
 
+    it("should call getRequestConfig with API key when provided", async () => {
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileById as any).mockResolvedValue(mockProfileData);
+
+      const apiKey = "test-api-key-123";
+      const result = await getProfile(testIdentifier, apiKey);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(apiKey);
+      expect(getProfileById).toHaveBeenCalledWith(testIdentifier, expect.any(Object));
+      expect(result).toEqual(mockProfileData);
+    });
+
+    it("should call getRequestConfig without API key when not provided", async () => {
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileById as any).mockResolvedValue(mockProfileData);
+
+      const result = await getProfile(testIdentifier);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(undefined);
+      expect(getProfileById).toHaveBeenCalledWith(testIdentifier, expect.any(Object));
+      expect(result).toEqual(mockProfileData);
+    });
+
+    it("should call getRequestConfig with undefined when API key is undefined", async () => {
+      const { getProfileById } = await import("../../src/generated/clients/index.js");
+      const { getRequestConfig } = await import("../../src/config/server-config.js");
+
+      (getProfileById as any).mockResolvedValue(mockProfileData);
+
+      const result = await getProfile(testIdentifier, undefined);
+
+      expect(getRequestConfig).toHaveBeenCalledWith(undefined);
+      expect(getProfileById).toHaveBeenCalledWith(testIdentifier, expect.any(Object));
+      expect(result).toEqual(mockProfileData);
+    });
+
     it("should handle HTTP errors", async () => {
       const { getProfileById } = await import("../../src/generated/clients/index.js");
       const { mapHttpError } = await import("../../src/common/utils.js");
