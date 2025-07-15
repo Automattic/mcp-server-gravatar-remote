@@ -28,6 +28,39 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"ENVIRONMENT": "development"
+	},
+	"env": {
+		"staging": {
+			"name": "mcp-server-gravatar-remote-staging",
+			"durable_objects": {
+				"bindings": [
+					{
+						"class_name": "GravatarMcpServer",
+						"name": "MCP_OBJECT"
+					}
+				]
+			},
+			"vars": {
+				"ENVIRONMENT": "staging"
+			}
+		},
+		"production": {
+			"name": "mcp-server-gravatar-remote-production",
+			"durable_objects": {
+				"bindings": [
+					{
+						"class_name": "GravatarMcpServer",
+						"name": "MCP_OBJECT"
+					}
+				]
+			},
+			"vars": {
+				"ENVIRONMENT": "production"
+			}
+		}
 	}
 	/**
 	 * Smart Placement
