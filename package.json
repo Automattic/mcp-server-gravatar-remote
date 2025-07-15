@@ -3,8 +3,10 @@
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
-		"deploy": "wrangler deploy",
+		"deploy": "wrangler deploy --env production",
+		"deploy:staging": "wrangler deploy --env staging",
 		"dev": "wrangler dev",
+		"dev:staging": "wrangler dev --env staging",
 		"format": "biome format --write",
 		"lint": "biome lint",
 		"lint:fix": "biome lint --fix",
