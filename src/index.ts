@@ -12,6 +12,7 @@ import {
 // Environment interface for Cloudflare Workers
 export interface Env {
   GRAVATAR_API_KEY?: string;
+  ASSETS: Fetcher;
 }
 
 // Define the MCP agent with Gravatar tools
@@ -24,9 +25,31 @@ export class GravatarMcpServer extends McpAgent<Env> {
     const { getProfile } = await import("./tools/profile-utils.js");
     const { getInferredInterests } = await import("./tools/experimental-utils.js");
     const { fetchAvatar, avatarParams } = await import("./tools/avatar-utils.js");
+    const { getGravatarIntegrationGuide } = await import("./resources/integration-guide.js");
 
     // Get optional API key from environment
     const apiKey = this.env?.GRAVATAR_API_KEY;
+
+    // Register Gravatar API Integration Guide prompt
+    this.server.registerPrompt(
+      "api-integration-prompt",
+      {
+        title: "Gravatar API Integration Guide",
+        description:
+          "Comprehensive API guide for Gravatar v3.0.0, detailing how developers can integrate avatar and profile services using email hash-based identification, API key authentication, and various endpoints across web, Android, and iOS platforms.",
+      },
+      async () => ({
+        messages: [
+          {
+            role: "user",
+            content: {
+              type: "text",
+              text: await getGravatarIntegrationGuide(this.env.ASSETS),
+            },
+          },
+        ],
+      }),
+    );
 
     // Register get_profile_by_email tool
     this.server.registerTool(
@@ -353,16 +376,16 @@ export class GravatarMcpServer extends McpAgent<Env> {
 export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const { pathname } = new URL(request.url);
-    
-    if (pathname.startsWith('/sse')) {
-      return GravatarMcpServer.serveSSE('/sse').fetch(request, env, ctx);
+
+    if (pathname.startsWith("/sse")) {
+      return GravatarMcpServer.serveSSE("/sse").fetch(request, env, ctx);
     }
-    
-    if (pathname.startsWith('/mcp')) {
-      return GravatarMcpServer.serve('/mcp').fetch(request, env, ctx);
+
+    if (pathname.startsWith("/mcp")) {
+      return GravatarMcpServer.serve("/mcp").fetch(request, env, ctx);
     }
-    
+
     // Optional: Handle root path or other routes
-    return new Response('Not Found', { status: 404 });
+    return new Response("Not Found", { status: 404 });
   },
 };

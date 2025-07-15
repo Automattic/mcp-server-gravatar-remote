@@ -5,11 +5,18 @@ import { GravatarMcpServer } from "../../src/index.js";
 vi.mock("agents/mcp", () => ({
   McpAgent: class MockMcpAgent {
     server: any;
+    env: any;
     constructor() {
       this.server = {
         registerTool: vi.fn(),
+        registerPrompt: vi.fn(),
         name: "mock-server",
         version: "1.0.0",
+      };
+      this.env = {
+        ASSETS: {
+          fetch: vi.fn().mockResolvedValue(new Response("mock markdown content")),
+        },
       };
     }
     async init() {
@@ -29,6 +36,7 @@ vi.mock("agents/mcp", () => ({
 vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
   McpServer: vi.fn().mockImplementation((serverInfo) => ({
     registerTool: vi.fn(),
+    registerPrompt: vi.fn(),
     name: serverInfo.name,
     version: serverInfo.version,
   })),
@@ -76,6 +84,14 @@ vi.mock("../../src/tools/avatar-utils.js", () => ({
       return acc;
     }, {}),
   })),
+}));
+
+vi.mock("../../src/resources/integration-guide.js", () => ({
+  getGravatarIntegrationGuide: vi
+    .fn()
+    .mockResolvedValue(
+      "# Mock Gravatar Integration Guide\n\nThis is a mock integration guide for testing.",
+    ),
 }));
 
 describe("MCP Server Integration Tests", () => {
