@@ -350,4 +350,19 @@ export class GravatarMcpServer extends McpAgent<Env> {
   }
 }
 
-export default GravatarMcpServer.mount("/sse");
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const { pathname } = new URL(request.url);
+    
+    if (pathname.startsWith('/sse')) {
+      return GravatarMcpServer.serveSSE('/sse').fetch(request, env, ctx);
+    }
+    
+    if (pathname.startsWith('/mcp')) {
+      return GravatarMcpServer.serve('/mcp').fetch(request, env, ctx);
+    }
+    
+    // Optional: Handle root path or other routes
+    return new Response('Not Found', { status: 404 });
+  },
+};
