@@ -3,7 +3,10 @@
  * Adapted for Cloudflare Workers environment
  */
 
+import { getEnv, type Env } from "../common/env.js";
 import { VERSION } from "../common/version.js";
+
+const env = getEnv<Env>();
 
 /**
  * Server configuration object
@@ -15,7 +18,7 @@ export const config = {
   restApiBase: "https://api.gravatar.com/v3",
 
   // User agent for API requests
-  userAgent: `Remote-Gravatar-MCP-Server/${VERSION}`,
+  userAgent: `${env.MCP_SERVER_NAME}/${VERSION}`,
 
   // Request timeout (in milliseconds)
   requestTimeout: 30000,
@@ -26,7 +29,7 @@ export const config = {
  */
 export function getServerInfo() {
   return {
-    name: "Gravatar MCP Server",
+    name: `${env.MCP_SERVER_NAME}`,
     version: VERSION,
   };
 }
