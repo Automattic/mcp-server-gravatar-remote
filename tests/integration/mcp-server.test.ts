@@ -17,8 +17,8 @@ vi.mock("../../src/common/version.js", () => ({
 // Create a proper mock server that matches the expected nested structure
 const mockInnerServer = {
   oninitialized: undefined, // This will be set by the production code
-  getClientVersion: vi.fn().mockReturnValue({ name: "test-client", version: "1.0.0" }),
-  getClientCapabilities: vi.fn().mockReturnValue({ sampling: true, elicitation: false }),
+  getClientVersion: vi.fn(),
+  getClientCapabilities: vi.fn(),
 };
 
 const mockMcpServer = {
