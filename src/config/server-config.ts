@@ -5,8 +5,13 @@
 
 import { getEnv, type Env } from "../common/env.js";
 import { VERSION } from "../common/version.js";
+import type { Implementation, ClientCapabilities } from "@modelcontextprotocol/sdk/types.js";
 
 const env = getEnv<Env>();
+
+// Store client information for client-aware User-Agent generation
+let _clientInfo: Implementation | undefined;
+let _clientCapabilities: ClientCapabilities | undefined;
 
 /**
  * Server configuration object
@@ -16,9 +21,6 @@ export const config = {
   // Gravatar API endpoints
   avatarApiBase: "https://gravatar.com/avatar",
   restApiBase: "https://api.gravatar.com/v3",
-
-  // User agent for API requests
-  userAgent: `${env.MCP_SERVER_NAME}/${VERSION}`,
 
   // Request timeout (in milliseconds)
   requestTimeout: 30000,
@@ -35,13 +37,60 @@ export function getServerInfo() {
 }
 
 /**
+ * Set the client information for client-aware User-Agent generation
+ * Should be called after client initialization
+ */
+export function setClientInfo(
+  clientInfo: Implementation | undefined,
+  clientCapabilities: ClientCapabilities | undefined,
+) {
+  _clientInfo = clientInfo;
+  _clientCapabilities = clientCapabilities;
+}
+
+/**
+ * Generate a User-Agent header that encodes MCP client information
+ * Format: Server-name/version MCP-client-name/version (capability_1; capability_2)
+ */
+export function generateUserAgent(): string {
+  const serverInfo = getServerInfo();
+
+  // Server portion - make RFC-compliant by replacing spaces with hyphens
+  const serverName = serverInfo.name.replace(/\s+/g, "-");
+  let userAgent = `${serverName}/${serverInfo.version}`;
+
+  // Client portion - use stored client info
+  if (_clientInfo) {
+    const clientName = (_clientInfo.name || "unknown").replace(/\s+/g, "-");
+    const clientVer = _clientInfo.version || "unknown";
+    userAgent += ` ${clientName}/${clientVer}`;
+  } else {
+    userAgent += " unknown/unknown";
+  }
+
+  // Capabilities portion
+  const capabilities = [];
+  if (_clientCapabilities) {
+    if (_clientCapabilities.sampling) capabilities.push("sampling");
+    if (_clientCapabilities.elicitation) capabilities.push("elicitation");
+    if (_clientCapabilities.roots) capabilities.push("roots");
+    if (_clientCapabilities.experimental) capabilities.push("experimental");
+  }
+
+  const capabilitiesString = capabilities.length > 0 ? capabilities.join("; ") : "none";
+  userAgent += ` (${capabilitiesString})`;
+
+  return userAgent;
+}
+
+/**
  * Get API headers for Gravatar REST API requests
  * @param apiKey - Optional API key for authenticated requests
  * @returns Headers object for fetch requests
  */
 export function getApiHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    "User-Agent": config.userAgent,
+    "User-Agent": generateUserAgent(),
     Accept: "application/json",
     "Content-Type": "application/json",
   };

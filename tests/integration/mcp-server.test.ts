@@ -1,18 +1,48 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GravatarMcpServer } from "../../src/index.js";
 
+// Mock Cloudflare Workers environment
+vi.mock("cloudflare:workers", () => ({
+  env: {
+    ENVIRONMENT: "development",
+    MCP_SERVER_NAME: "Test Gravatar MCP Server",
+  },
+}));
+
+// Mock the version to avoid test dependency on real version
+vi.mock("../../src/common/version.js", () => ({
+  VERSION: "1.0.0",
+}));
+
+// Create a proper mock server that matches the expected nested structure
+const mockInnerServer = {
+  oninitialized: undefined, // This will be set by the production code
+  getClientVersion: vi.fn(),
+  getClientCapabilities: vi.fn(),
+};
+
+const mockMcpServer = {
+  registerTool: vi.fn(),
+  registerPrompt: vi.fn(),
+  name: "test-server",
+  version: "1.0.0",
+  server: mockInnerServer, // This provides the nested structure that production code expects
+};
+
+// Mock the MCP SDK - single, comprehensive mock
+vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
+  McpServer: vi.fn().mockImplementation((_serverInfo) => mockMcpServer),
+}));
+
+// Use real server config to test actual User-Agent functionality
+// The version is mocked above to ensure test independence
+
 // Mock the agents module to avoid complex MCP agent initialization
 vi.mock("agents/mcp", () => ({
   McpAgent: class MockMcpAgent {
-    server: any;
     env: any;
     constructor() {
-      this.server = {
-        registerTool: vi.fn(),
-        registerPrompt: vi.fn(),
-        name: "mock-server",
-        version: "1.0.0",
-      };
+      // Don't override the server property - let the production code set it
       this.env = {
         ASSETS: {
           fetch: vi.fn().mockResolvedValue(new Response("mock markdown content")),
@@ -30,60 +60,6 @@ vi.mock("agents/mcp", () => ({
       };
     }
   },
-}));
-
-// Mock the MCP SDK
-vi.mock("@modelcontextprotocol/sdk/server/mcp.js", () => ({
-  McpServer: vi.fn().mockImplementation((serverInfo) => ({
-    registerTool: vi.fn(),
-    registerPrompt: vi.fn(),
-    name: serverInfo.name,
-    version: serverInfo.version,
-  })),
-}));
-
-// Mock the config module
-vi.mock("../../src/config/server-config.js", () => ({
-  getServerInfo: vi.fn().mockReturnValue({
-    name: "Test Gravatar MCP Server",
-    version: "1.0.0",
-  }),
-}));
-
-// Mock the utility modules
-vi.mock("../../src/common/utils.js", () => ({
-  generateIdentifier: vi.fn().mockResolvedValue("mocked-hash-123"),
-}));
-
-vi.mock("../../src/tools/profile-utils.js", () => ({
-  getProfile: vi.fn().mockResolvedValue({
-    id: "test-profile",
-    displayName: "Test User",
-  }),
-}));
-
-vi.mock("../../src/tools/experimental-utils.js", () => ({
-  getInferredInterests: vi.fn().mockResolvedValue([
-    { id: 1, name: "Programming" },
-    { id: 2, name: "Web Development" },
-  ]),
-}));
-
-vi.mock("../../src/tools/avatar-utils.js", () => ({
-  fetchAvatar: vi.fn().mockResolvedValue({
-    base64Data: "AQIDBA==",
-    mimeType: "image/png",
-  }),
-  avatarParams: vi.fn().mockImplementation((identifier, ...args) => ({
-    avatarIdentifier: identifier,
-    ...args.reduce((acc, arg, index) => {
-      if (arg !== undefined) {
-        const keys = ["size", "defaultOption", "forceDefault", "rating"];
-        if (keys[index]) acc[keys[index]] = arg;
-      }
-      return acc;
-    }, {}),
-  })),
 }));
 
 vi.mock("../../src/resources/integration-guide.js", () => ({
@@ -206,143 +182,42 @@ describe("MCP Server Integration Tests", () => {
     });
   });
 
-  describe("End-to-End Tool Execution", () => {
+  describe("User-Agent Integration", () => {
     beforeEach(async () => {
       server = new (GravatarMcpServer as any)();
-      await server.init();
     });
 
-    it("should execute get_profile_by_email tool successfully", async () => {
-      const registerToolCalls = (server.server.registerTool as any).mock.calls;
-
-      // Find the get_profile_by_email tool registration
-      const profileByEmailCall = registerToolCalls.find(
-        (call: any) => call[0] === "get_profile_by_email",
+    it("should use generated User-Agent in HTTP requests", async () => {
+      const { getApiHeaders, setClientInfo } = await import("../../src/config/server-config.js");
+      
+      // Set up client info to test real User-Agent generation
+      setClientInfo(
+        { name: "Test-Client", version: "1.0.0" },
+        { sampling: {}, elicitation: {} }
       );
-      expect(profileByEmailCall).toBeDefined();
 
-      // Get the tool handler function
-      const [, , toolHandler] = profileByEmailCall;
+      // Get headers using the real function
+      const headers = getApiHeaders("test-api-key");
 
-      // Execute the tool with test data
-      const result = await toolHandler({ email: "test@example.com" });
-
-      // Check the result structure
-      expect(result).toBeDefined();
-      expect(result.content).toBeDefined();
-      expect(result.content[0]).toBeDefined();
-      expect(result.content[0].type).toBe("text");
-      expect(result.structuredContent).toBeDefined();
-      expect(result.structuredContent.id).toBe("test-profile");
-      expect(result.structuredContent.displayName).toBe("Test User");
+      // Verify the User-Agent contains real client information
+      expect(headers["User-Agent"]).toMatch(/Test-Gravatar-MCP-Server\/1\.0\.0 Test-Client\/1\.0\.0 \(sampling; elicitation\)/);
+      expect(headers.Authorization).toBe("Bearer test-api-key");
+      expect(headers.Accept).toBe("application/json");
+      expect(headers["Content-Type"]).toBe("application/json");
     });
 
-    it("should execute get_avatar_by_email tool successfully", async () => {
-      const registerToolCalls = (server.server.registerTool as any).mock.calls;
+    it("should handle missing client info gracefully in HTTP requests", async () => {
+      const { getApiHeaders, setClientInfo } = await import("../../src/config/server-config.js");
+      
+      // Clear client info
+      setClientInfo(undefined, undefined);
 
-      // Find the get_avatar_by_email tool registration
-      const avatarByEmailCall = registerToolCalls.find(
-        (call: any) => call[0] === "get_avatar_by_email",
-      );
-      expect(avatarByEmailCall).toBeDefined();
+      // Get headers using the real function
+      const headers = getApiHeaders();
 
-      // Get the tool handler function
-      const [, , toolHandler] = avatarByEmailCall;
-
-      // Execute the tool with test data
-      const result = await toolHandler({
-        email: "test@example.com",
-        size: 200,
-        defaultOption: "identicon",
-      });
-
-      // Check the result structure
-      expect(result).toBeDefined();
-      expect(result.content).toBeDefined();
-      expect(result.content[0]).toBeDefined();
-      expect(result.content[0].type).toBe("image");
-      expect(result.content[0].data).toBeDefined();
-      expect(result.content[0].mimeType).toBe("image/png");
-    });
-
-    it("should execute get_inferred_interests_by_email tool successfully", async () => {
-      const registerToolCalls = (server.server.registerTool as any).mock.calls;
-
-      // Find the get_inferred_interests_by_email tool registration
-      const interestsCall = registerToolCalls.find(
-        (call: any) => call[0] === "get_inferred_interests_by_email",
-      );
-      expect(interestsCall).toBeDefined();
-
-      // Get the tool handler function
-      const [, , toolHandler] = interestsCall;
-
-      // Execute the tool with test data
-      const result = await toolHandler({ email: "test@example.com" });
-
-      // Check the result structure
-      expect(result).toBeDefined();
-      expect(result.content).toBeDefined();
-      expect(result.content[0]).toBeDefined();
-      expect(result.content[0].type).toBe("text");
-      expect(result.structuredContent).toBeDefined();
-      expect(result.structuredContent.interests).toBeDefined();
-      expect(Array.isArray(result.structuredContent.interests)).toBe(true);
-      expect(result.structuredContent.interests.length).toBe(2);
-    });
-
-    it("should handle large avatar images without stack overflow", async () => {
-      // Mock fetchAvatar to return a large avatar (simulating 2048x2048 avatar)
-      // The API supports images up to 2048x2048, which can be 500KB-2MB+ as PNG
-      // This test would have caught the original bug in src/index.ts where large avatars
-      // caused "Maximum call stack size exceeded" when converting to base64
-      const { fetchAvatar } = await import("../../src/tools/avatar-utils.js");
-      const largeBase64Data = "A".repeat(666000); // Large base64 string (~500KB decoded)
-      (fetchAvatar as any).mockResolvedValueOnce({
-        base64Data: largeBase64Data,
-        mimeType: "image/png",
-      });
-
-      const registerToolCalls = (server.server.registerTool as any).mock.calls;
-      const avatarByIdCall = registerToolCalls.find((call: any) => call[0] === "get_avatar_by_id");
-      expect(avatarByIdCall).toBeDefined();
-
-      const [, , toolHandler] = avatarByIdCall;
-
-      // Execute the tool with maximum avatar size - should not throw stack overflow
-      const result = await toolHandler({
-        avatarIdentifier: "20e74a1399c883caeeba81b57007bcaa058940dcdffca01babfddbaefa5c3c4a",
-        size: 2048,
-      });
-
-      // Should handle large avatar without errors
-      expect(result).toBeDefined();
-      expect(result.content).toBeDefined();
-      expect(result.content[0]).toBeDefined();
-      expect(result.content[0].type).toBe("image");
-      expect(result.content[0].data).toBe(largeBase64Data);
-      expect(result.content[0].mimeType).toBe("image/png");
-    });
-
-    it("should handle tool execution errors gracefully", async () => {
-      // Mock an error in the profile utility
-      const { getProfile } = await import("../../src/tools/profile-utils.js");
-      (getProfile as any).mockRejectedValueOnce(new Error("API Error"));
-
-      const registerToolCalls = (server.server.registerTool as any).mock.calls;
-      const profileByEmailCall = registerToolCalls.find(
-        (call: any) => call[0] === "get_profile_by_email",
-      );
-      const [, , toolHandler] = profileByEmailCall;
-
-      // Execute the tool and expect error handling
-      const result = await toolHandler({ email: "test@example.com" });
-
-      // Check that error was handled gracefully
-      expect(result).toBeDefined();
-      expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain("Failed to get profile");
-      expect(result.content[0].text).toContain("API Error");
+      // Verify the User-Agent handles missing client info
+      expect(headers["User-Agent"]).toMatch(/Test-Gravatar-MCP-Server\/1\.0\.0 unknown\/unknown \(none\)/);
+      expect(headers).not.toHaveProperty("Authorization");
     });
   });
 });

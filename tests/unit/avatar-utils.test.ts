@@ -10,9 +10,9 @@ import {
 vi.mock("../../src/config/server-config.js", () => ({
   config: {
     avatarApiBase: "https://gravatar.com/avatar",
-    userAgent: "test-user-agent/1.0",
     requestTimeout: 5000,
   },
+  generateUserAgent: vi.fn().mockReturnValue("test-user-agent/1.0"),
 }));
 
 // Mock fetch globally

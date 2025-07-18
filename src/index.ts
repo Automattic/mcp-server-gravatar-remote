@@ -1,7 +1,7 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getServerInfo } from "./config/server-config.js";
+import { getServerInfo, setClientInfo } from "./config/server-config.js";
 import {
   mcpProfileOutputSchema,
   mcpInterestsOutputSchema,
@@ -20,6 +20,12 @@ export class GravatarMcpServer extends McpAgent<Env> {
   server = new McpServer(getServerInfo());
 
   async init() {
+    // Set up callback to store client information after client initialization
+    this.server.server.oninitialized = () => {
+      const clientInfo = this.server.server.getClientVersion();
+      const clientCapabilities = this.server.server.getClientCapabilities();
+      setClientInfo(clientInfo, clientCapabilities);
+    };
     // Import utilities
     const { generateIdentifier } = await import("./common/utils.js");
     const { getProfile } = await import("./tools/profile-utils.js");
