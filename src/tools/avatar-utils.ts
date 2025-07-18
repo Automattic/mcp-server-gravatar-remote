@@ -3,7 +3,7 @@
  * Uses direct HTTP calls to Gravatar avatar endpoints
  */
 
-import { config } from "../config/server-config.js";
+import { config, generateUserAgent } from "../config/server-config.js";
 
 /**
  * Convert ArrayBuffer to base64 string without stack overflow
@@ -85,7 +85,7 @@ export async function fetchAvatar(params: AvatarParams): Promise<AvatarResult> {
   // Fetch the image
   const response = await fetch(url, {
     headers: {
-      "User-Agent": config.userAgent,
+      "User-Agent": generateUserAgent(),
     },
     signal: AbortSignal.timeout(config.requestTimeout),
   });
