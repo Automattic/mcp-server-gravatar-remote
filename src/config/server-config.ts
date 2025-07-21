@@ -13,6 +13,9 @@ const env = getEnv<Env>();
 let _clientInfo: Implementation | undefined;
 let _clientCapabilities: ClientCapabilities | undefined;
 
+// Store connecting IP for API request forwarding
+let _connectingIP: string | undefined;
+
 /**
  * Server configuration object
  * Handles environment variables and API endpoints
@@ -46,6 +49,21 @@ export function setClientInfo(
 ) {
   _clientInfo = clientInfo;
   _clientCapabilities = clientCapabilities;
+}
+
+/**
+ * Set the connecting IP for API requests
+ * Should be called during McpAgent initialization
+ */
+export function setConnectingIP(ip: string | null) {
+  _connectingIP = ip || undefined;
+}
+
+/**
+ * Get the stored connecting IP
+ */
+export function getConnectingIP(): string | undefined {
+  return _connectingIP;
 }
 
 /**
@@ -97,6 +115,11 @@ export function getApiHeaders(apiKey?: string): Record<string, string> {
 
   if (apiKey && apiKey.trim() !== "") {
     headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  // Forward the connecting IP as GR-Connecting-IP for Gravatar API
+  if (_connectingIP) {
+    headers["GR-Connecting-IP"] = _connectingIP;
   }
 
   return headers;

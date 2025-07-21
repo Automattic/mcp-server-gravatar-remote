@@ -1,7 +1,7 @@
 import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getServerInfo, setClientInfo } from "./config/server-config.js";
+import { getServerInfo, setClientInfo, setConnectingIP } from "./config/server-config.js";
 import {
   mcpProfileOutputSchema,
   mcpInterestsOutputSchema,
@@ -18,6 +18,7 @@ import { getGravatarIntegrationGuide } from "./resources/integration-guide.js";
 export interface Env {
   GRAVATAR_API_KEY?: string;
   ASSETS: Fetcher;
+  CONNECTING_IP?: string;
 }
 
 // Define the MCP agent with Gravatar tools
@@ -25,6 +26,11 @@ export class GravatarMcpServer extends McpAgent<Env> {
   server = new McpServer(getServerInfo());
 
   async init() {
+    // Store the connecting IP from isolated environment
+    const connectingIP = this.env?.CONNECTING_IP;
+    if (connectingIP) {
+      setConnectingIP(connectingIP);
+    }
     // Set up callback to store client information after client initialization
     this.server.server.oninitialized = () => {
       const clientInfo = this.server.server.getClientVersion();
@@ -381,12 +387,18 @@ export default {
   fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const { pathname } = new URL(request.url);
 
+    // Capture the connecting IP from Cloudflare for forwarding to Gravatar API
+    const connectingIP = request.headers.get("CF-Connecting-IP");
+
+    // Add connecting IP to env - safe due to per-client isolation
+    const envWithIP = { ...env, CONNECTING_IP: connectingIP || undefined };
+
     if (pathname.startsWith("/sse")) {
-      return GravatarMcpServer.serveSSE("/sse").fetch(request, env, ctx);
+      return GravatarMcpServer.serveSSE("/sse").fetch(request, envWithIP, ctx);
     }
 
     if (pathname.startsWith("/mcp")) {
-      return GravatarMcpServer.serve("/mcp").fetch(request, env, ctx);
+      return GravatarMcpServer.serve("/mcp").fetch(request, envWithIP, ctx);
     }
 
     // Optional: Handle root path or other routes
