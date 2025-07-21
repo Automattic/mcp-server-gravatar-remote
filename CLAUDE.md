@@ -383,3 +383,39 @@ GRAVATAR_API_KEY=your-api-key-here
 ```
 
 The API key enables access to additional profile fields and authenticated endpoints.
+
+## MCP Agent Insights
+
+- Per-client isolation: Each MCP client connection gets its own McpAgent instance backed by a separate Durable
+  Object
+- No race conditions: "Global" variables in imported modules are actually per-client scoped, making them safe for
+  client-specific data like User-Agent info
+- State separation: Each client maintains independent state, configuration, and context
+- Session lifecycle: When clients reconnect, they get a fresh instance (state doesn't persist across sessions)
+
+Development Implications:
+
+- Global variables in server-config.ts and similar modules are safe - they're isolated per client
+- No need for complex per-instance state management patterns
+- Client-specific features (like User-Agent generation) work correctly with multiple concurrent clients
+- Simpler code patterns are often correct due to built-in isolation
+
+Official Documentation:
+
+- Primary Source: https://developers.cloudflare.com/agents/model-context-protocol/mcp-agent-api/
+- Architecture Overview: https://developers.cloudflare.com/agents/model-context-protocol/
+- Transport Details: https://developers.cloudflare.com/agents/model-context-protocol/transport/
+
+Key Quote:
+
+"Currently, each client session is backed by an instance of the McpAgent class... each instance of your MCP 
+server has its own durable state, backed by a Durable Object, with its own SQL database."
+
+This knowledge prevents over-engineering solutions for race conditions that don't exist in this architecture.
+
+## Claude Code Memories
+
+- Implemented the first version of the Remote Gravatar MCP Server
+- Successfully integrated Cloudflare Workers with Gravatar's OpenAPI specification
+- Developed a schema-first approach to generate TypeScript clients and Zod schemas
+- Created a modular MCP architecture with isolated tool utilities
