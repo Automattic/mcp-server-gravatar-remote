@@ -189,18 +189,17 @@ describe("MCP Server Integration Tests", () => {
 
     it("should use generated User-Agent in HTTP requests", async () => {
       const { getApiHeaders, setClientInfo } = await import("../../src/config/server-config.js");
-      
+
       // Set up client info to test real User-Agent generation
-      setClientInfo(
-        { name: "Test-Client", version: "1.0.0" },
-        { sampling: {}, elicitation: {} }
-      );
+      setClientInfo({ name: "Test-Client", version: "1.0.0" }, { sampling: {}, elicitation: {} });
 
       // Get headers using the real function
       const headers = getApiHeaders("test-api-key");
 
       // Verify the User-Agent contains real client information
-      expect(headers["User-Agent"]).toMatch(/Test-Gravatar-MCP-Server\/1\.0\.0 Test-Client\/1\.0\.0 \(sampling; elicitation\)/);
+      expect(headers["User-Agent"]).toMatch(
+        /Test-Gravatar-MCP-Server\/1\.0\.0 Test-Client\/1\.0\.0 \(sampling; elicitation\)/,
+      );
       expect(headers.Authorization).toBe("Bearer test-api-key");
       expect(headers.Accept).toBe("application/json");
       expect(headers["Content-Type"]).toBe("application/json");
@@ -208,7 +207,7 @@ describe("MCP Server Integration Tests", () => {
 
     it("should handle missing client info gracefully in HTTP requests", async () => {
       const { getApiHeaders, setClientInfo } = await import("../../src/config/server-config.js");
-      
+
       // Clear client info
       setClientInfo(undefined, undefined);
 
@@ -216,7 +215,9 @@ describe("MCP Server Integration Tests", () => {
       const headers = getApiHeaders();
 
       // Verify the User-Agent handles missing client info
-      expect(headers["User-Agent"]).toMatch(/Test-Gravatar-MCP-Server\/1\.0\.0 unknown\/unknown \(none\)/);
+      expect(headers["User-Agent"]).toMatch(
+        /Test-Gravatar-MCP-Server\/1\.0\.0 unknown\/unknown \(none\)/,
+      );
       expect(headers).not.toHaveProperty("Authorization");
     });
   });

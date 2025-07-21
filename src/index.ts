@@ -8,6 +8,11 @@ import {
   mcpProfileInputShape,
   mcpEmailInputShape,
 } from "./schemas/mcp-schemas.js";
+import { generateIdentifier } from "./common/utils.js";
+import { getProfile } from "./tools/profile-utils.js";
+import { getInferredInterests } from "./tools/experimental-utils.js";
+import { fetchAvatar, avatarParams } from "./tools/avatar-utils.js";
+import { getGravatarIntegrationGuide } from "./resources/integration-guide.js";
 
 // Environment interface for Cloudflare Workers
 export interface Env {
@@ -26,13 +31,6 @@ export class GravatarMcpServer extends McpAgent<Env> {
       const clientCapabilities = this.server.server.getClientCapabilities();
       setClientInfo(clientInfo, clientCapabilities);
     };
-    // Import utilities
-    const { generateIdentifier } = await import("./common/utils.js");
-    const { getProfile } = await import("./tools/profile-utils.js");
-    const { getInferredInterests } = await import("./tools/experimental-utils.js");
-    const { fetchAvatar, avatarParams } = await import("./tools/avatar-utils.js");
-    const { getGravatarIntegrationGuide } = await import("./resources/integration-guide.js");
-
     // Get optional API key from environment
     const apiKey = this.env?.GRAVATAR_API_KEY;
 
