@@ -179,3 +179,6 @@ dist
 # Client
 .clinerules/
 memory-bank/
+
+# MCP Project settings
+.mcp.json
