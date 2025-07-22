@@ -2,27 +2,24 @@
  * Gravatar API Integration Guide Prompt
  *
  * Provides access to the comprehensive Gravatar API integration documentation
- * using Cloudflare Workers static assets for MCP prompt functionality.
+ * using local file system for Node.js environment.
  */
+
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 
 /**
- * Fetches the Gravatar API integration guide markdown content from static assets
- * @param assetsFetcher The ASSETS binding from Cloudflare Workers environment
+ * Reads the Gravatar API integration guide markdown content from local file
  * @returns Promise<string> The markdown content of the integration guide
  */
-export async function getGravatarIntegrationGuide(assetsFetcher: Fetcher): Promise<string> {
+export async function getGravatarIntegrationGuide(): Promise<string> {
   try {
-    const response = await assetsFetcher.fetch(
-      new Request("https://assets/gravatar-api-integration-guide.md"),
-    );
+    const { readFile } = await import("node:fs/promises");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const filePath = join(__dirname, "../../docs/gravatar-api-integration-guide.md");
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch integration guide: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.text();
+    return await readFile(filePath, "utf-8");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to load Gravatar integration guide: ${errorMessage}`);
