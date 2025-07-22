@@ -171,11 +171,6 @@ dist
 .yarn/install-state.gz
 .pnp.\*
 
-# wrangler project
-
-.dev.vars
-.wrangler/
-
 # Client
 .clinerules/
 memory-bank/
