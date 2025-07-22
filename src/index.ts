@@ -18,17 +18,44 @@ import { getGravatarIntegrationGuide } from "./resources/integration-guide.js";
 export interface Env {
   GRAVATAR_API_KEY?: string;
   ASSETS: Fetcher;
-  CONNECTING_IP?: string;
+}
+
+// State interface for the MCP agent
+export interface GravatarState {
+  connectingIP?: string;
+}
+
+// Props interface for passing data from Worker to MCP agent
+export interface GravatarProps extends Record<string, unknown> {
+  connectingIP?: string;
 }
 
 // Define the MCP agent with Gravatar tools
-export class GravatarMcpServer extends McpAgent<Env> {
+export class GravatarMcpServer extends McpAgent<Env, GravatarState, GravatarProps> {
+  initialState: GravatarState = {};
   server = new McpServer(getServerInfo());
 
+  // Method to set connecting IP in state
+  setConnectingIP(ip: string | null) {
+    this.setState({
+      ...this.state,
+      connectingIP: ip || undefined,
+    });
+    if (ip) {
+      setConnectingIP(ip);
+    }
+  }
+
   async init() {
-    // Store the connecting IP from isolated environment
-    const connectingIP = this.env?.CONNECTING_IP;
+    // Store the connecting IP from props passed via ExecutionContext
+    const connectingIP = this.props?.connectingIP;
     if (connectingIP) {
+      // Store in state for consistency
+      this.setState({
+        ...this.state,
+        connectingIP,
+      });
+      // Store in module-level state for API calls
       setConnectingIP(connectingIP);
     }
     // Set up callback to store client information after client initialization
@@ -390,15 +417,15 @@ export default {
     // Capture the connecting IP from Cloudflare for forwarding to Gravatar API
     const connectingIP = request.headers.get("CF-Connecting-IP");
 
-    // Add connecting IP to env - safe due to per-client isolation
-    const envWithIP = { ...env, CONNECTING_IP: connectingIP || undefined };
+    // Append connecting IP to ExecutionContext props
+    ctx.props = { ...ctx.props, connectingIP };
 
     if (pathname.startsWith("/sse")) {
-      return GravatarMcpServer.serveSSE("/sse").fetch(request, envWithIP, ctx);
+      return GravatarMcpServer.serveSSE("/sse").fetch(request, env, ctx);
     }
 
     if (pathname.startsWith("/mcp")) {
-      return GravatarMcpServer.serve("/mcp").fetch(request, envWithIP, ctx);
+      return GravatarMcpServer.serve("/mcp").fetch(request, env, ctx);
     }
 
     // Optional: Handle root path or other routes
