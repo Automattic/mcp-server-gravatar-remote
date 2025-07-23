@@ -130,7 +130,7 @@ export const createUnifiedTransport = (server: McpServer) => {
     res.status(204).end();
   });
 
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 8787;
   app.listen(port, () => {
     console.log(`🚀 Gravatar MCP Server listening on port ${port}`);
     console.log(`📡 SSE endpoint: http://localhost:${port}/mcp`);
