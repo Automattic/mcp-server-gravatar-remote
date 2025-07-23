@@ -8,8 +8,14 @@
 import { createServer } from "./server.js";
 import { createUnifiedTransport } from "./transports/unified.js";
 
-// Create MCP server instance
-const mcpServer = createServer();
+const server = createServer();
 
-// Start unified transport (creates its own Express app)
-createUnifiedTransport(mcpServer);
+async function main() {
+  console.log("Starting Gravatar MCP unified HTTP+SSE server...");
+  createUnifiedTransport(server);
+}
+
+main().catch((err) => {
+  console.error("Server error:", err);
+  process.exit(1);
+});
