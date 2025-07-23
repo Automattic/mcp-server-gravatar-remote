@@ -1,14 +1,30 @@
 /**
  * StreamableHTTP MCP transport
- * - POST /mcp: StreamableHTTP JSON-RPC requests
+ * - POST /mcp: StreamableHTTP JSON-RPC requests (client-to-server)
+ * - GET /mcp: SSE stream for server notifications (server-to-client)
  * - GET /health: Health check endpoint
+ *
+ * Based on the CircleCI MCP server implementation:
+ * https://github.com/CircleCI-Public/mcp-server-circleci
+ * Licensed under Apache License 2.0
  */
 
 import express from "express";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
-export const createUnifiedTransport = (server: McpServer) => {
+// Debug subclass that logs every payload sent over SSE
+class DebugSSETransport extends SSEServerTransport {
+  override async send(payload: any) {
+    if (process.env.DEBUG === "true") {
+      console.log("[DEBUG] SSE out ->", JSON.stringify(payload));
+    }
+    return super.send(payload);
+  }
+}
+
+export const createHttpTransport = (server: McpServer) => {
   const app = express();
   app.use(express.json());
 
@@ -22,11 +38,34 @@ export const createUnifiedTransport = (server: McpServer) => {
     });
   });
 
+  // GET /mcp → SSE stream for StreamableHTTP server-to-client notifications
+  app.get("/mcp", (_req, res) => {
+    (async () => {
+      if (process.env.DEBUG === "true") {
+        console.log("[DEBUG] StreamableHTTP SSE stream request");
+      }
+      // Create SSE transport for server-to-client notifications
+      const transport = new DebugSSETransport("/mcp", res);
+      if (process.env.DEBUG === "true") {
+        console.log("[DEBUG] Created SSE transport for StreamableHTTP notifications");
+      }
+      await server.connect(transport);
+      // Notify newly connected client of current tool catalogue
+      server.sendToolListChanged();
+      // SSE connection will be closed by client or on disconnect
+    })().catch((err) => {
+      console.error("GET /mcp error:", err);
+      if (!res.headersSent) res.status(500).end();
+    });
+  });
+
   // POST /mcp → StreamableHTTP transport only
   app.post("/mcp", async (req, res) => {
     try {
       if (process.env.DEBUG === "true") {
         console.log(`[DEBUG] POST /mcp - Method: ${req.body?.method}`);
+        const names = Object.keys((server as any)._registeredTools ?? {});
+        console.log("[DEBUG] visible tools:", names);
       }
 
       const httpTransport = new StreamableHTTPServerTransport({

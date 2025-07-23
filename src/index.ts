@@ -6,13 +6,13 @@
  */
 
 import { createServer } from "./server.js";
-import { createUnifiedTransport } from "./transports/unified.js";
+import { createHttpTransport } from "./transports/http-unified.js";
 
 const server = createServer();
 
 async function main() {
-  console.log("Starting Gravatar MCP unified HTTP+SSE server...");
-  createUnifiedTransport(server);
+  console.log("Starting Gravatar MCP StreamableHTTP server...");
+  createHttpTransport(server);
 }
 
 main().catch((err) => {
