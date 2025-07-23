@@ -8,8 +8,8 @@
 		"gravatar-mcp-server": "dist/index.js"
 	},
 	"scripts": {
-		"dev": "nodemon --exec tsx src/index.ts",
-		"start": "node dist/index.js",
+		"dev": "nodemon --watch . --ext ts,json --env-file=.env --exec tsx src/index.ts",
+		"start": "node --env-file=.env dist/index.js",
 		"build": "tsc && chmod +x dist/index.js",
 		"format": "biome format --write",
 		"lint": "biome lint",
