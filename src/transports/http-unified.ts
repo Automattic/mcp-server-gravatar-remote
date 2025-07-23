@@ -13,7 +13,7 @@ import express from "express";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
-
+import { getServerInfo } from "../config/server-config.js";
 // Debug subclass that logs every payload sent over SSE
 class DebugSSETransport extends SSEServerTransport {
   override async send(payload: any) {
@@ -30,10 +30,11 @@ export const createHttpTransport = (server: McpServer) => {
 
   // Health check endpoint
   app.get("/health", (_req, res) => {
+    const serverInfo = getServerInfo();
     res.json({
       status: "ok",
-      server: "gravatar-mcp-server",
-      version: "0.1.0",
+      server: serverInfo.name,
+      version: serverInfo.version,
       transports: ["streamable-http"],
     });
   });

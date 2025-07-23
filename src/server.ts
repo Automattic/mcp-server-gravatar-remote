@@ -5,7 +5,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { getServerInfo } from "./config/server-config.js";
+import { getServerInfo, setClientInfo } from "./config/server-config.js";
 import {
   mcpProfileOutputSchema,
   mcpInterestsOutputSchema,
@@ -20,6 +20,24 @@ import { getGravatarIntegrationGuide } from "./resources/integration-guide.js";
 
 export function createServer(): McpServer {
   const server = new McpServer(getServerInfo());
+
+  // Capture client info after initialization for User-Agent generation
+  // Note: This callback only fires when clients follow the full MCP initialization flow.
+  // Some clients (like MCP Inspector making direct tool calls) may bypass initialization,
+  // resulting in "unknown/unknown" client info in User-Agent headers.
+  server.server.oninitialized = () => {
+    const clientInfo = server.server.getClientVersion();
+    const clientCapabilities = server.server.getClientCapabilities();
+
+    setClientInfo(clientInfo, clientCapabilities);
+
+    if (process.env.DEBUG === "true") {
+      console.log("[DEBUG] Client info:", {
+        name: clientInfo?.name ?? "unknown",
+        version: clientInfo?.version ?? "unknown",
+      });
+    }
+  };
 
   // Get API key from environment
   const apiKey = process.env.GRAVATAR_API_KEY;

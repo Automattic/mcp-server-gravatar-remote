@@ -13,9 +13,6 @@ const env = getEnv<Env>();
 let _clientInfo: Implementation | undefined;
 let _clientCapabilities: ClientCapabilities | undefined;
 
-// Store connecting IP for API request forwarding
-let _connectingIP: string | undefined;
-
 /**
  * Server configuration object
  * Handles environment variables and API endpoints
@@ -52,18 +49,10 @@ export function setClientInfo(
 }
 
 /**
- * Set the connecting IP for API requests
- * Should be called during McpAgent initialization
+ * Check if client info has been captured yet
  */
-export function setConnectingIP(ip: string | null) {
-  _connectingIP = ip || undefined;
-}
-
-/**
- * Get the stored connecting IP
- */
-export function getConnectingIP(): string | undefined {
-  return _connectingIP;
+export function hasClientInfo(): boolean {
+  return _clientInfo !== undefined;
 }
 
 /**
@@ -98,6 +87,10 @@ export function generateUserAgent(): string {
   const capabilitiesString = capabilities.length > 0 ? capabilities.join("; ") : "none";
   userAgent += ` (${capabilitiesString})`;
 
+  if (process.env.DEBUG === "true") {
+    console.log("[DEBUG] Generated User-Agent:", userAgent);
+  }
+
   return userAgent;
 }
 
@@ -117,9 +110,11 @@ export function getApiHeaders(apiKey?: string): Record<string, string> {
     headers.Authorization = `Bearer ${apiKey}`;
   }
 
-  // Forward the connecting IP as GR-Connecting-IP for Gravatar API
-  if (_connectingIP) {
-    headers["GR-Connecting-IP"] = _connectingIP;
+  if (process.env.DEBUG === "true") {
+    console.log("[DEBUG] API Headers:", {
+      "User-Agent": headers["User-Agent"],
+      Authorization: apiKey ? "Bearer ***" : "(none)",
+    });
   }
 
   return headers;
