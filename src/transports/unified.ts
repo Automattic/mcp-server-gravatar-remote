@@ -1,13 +1,12 @@
 /**
- * Unified MCP transport: Streamable HTTP + SSE on same app/port/session.
- * - POST /mcp: JSON-RPC (single or chunked JSON)
- * - GET /mcp: SSE stream (server-initiated notifications)
+ * Unified MCP transport: Supports both StreamableHTTP and HTTP+SSE transports
+ * - POST /mcp: Auto-detects transport type based on Accept header and sessionId
+ * - GET /mcp: Establishes SSE stream for HTTP+SSE transport
  * - DELETE /mcp: Session termination
  * - GET /health: Health check endpoint
  *
- * Based on the CircleCI MCP server implementation:
- * https://github.com/CircleCI-Public/mcp-server-circleci
- * Licensed under Apache License 2.0
+ * Implements MCP backwards compatibility as per:
+ * https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#backwards-compatibility
  */
 
 import express from "express";
@@ -25,11 +24,12 @@ class DebugSSETransport extends SSEServerTransport {
   }
 }
 
+// Session storage for SSE transports
+const sseTransports = new Map<string, DebugSSETransport>();
+
 export const createUnifiedTransport = (server: McpServer) => {
   const app = express();
   app.use(express.json());
-
-  // Stateless: No in-memory session or transport store
 
   // Health check endpoint
   app.get("/health", (_req, res) => {
@@ -37,103 +37,165 @@ export const createUnifiedTransport = (server: McpServer) => {
       status: "ok",
       server: "gravatar-mcp-server",
       version: "0.1.0",
+      transports: ["streamable-http", "http+sse"],
+      activeSessions: {
+        sse: sseTransports.size
+      }
     });
   });
 
-  // GET /mcp → open SSE stream, assign session if needed (stateless)
-  app.get("/mcp", (req, res) => {
-    (async () => {
-      if (process.env.DEBUG === "true") {
-        const sessionId =
-          req.header("Mcp-Session-Id") ||
-          req.header("mcp-session-id") ||
-          (req.query.sessionId as string);
-        console.log("[DEBUG] [GET /mcp] Incoming session:", sessionId);
-      }
-      // Create SSE transport (stateless)
-      const transport = new DebugSSETransport("/mcp", res);
-      if (process.env.DEBUG === "true") {
-        console.log("[DEBUG] [GET /mcp] Created SSE transport.");
-      }
-      await server.connect(transport);
-      // Notify newly connected client of current tool catalogue
-      await server.sendToolListChanged();
-      // SSE connection will be closed by client or on disconnect
-    })().catch((err) => {
-      console.error("GET /mcp error:", err);
-      if (!res.headersSent) res.status(500).end();
-    });
-  });
-
-  // POST /mcp → Streamable HTTP, session-aware
-  app.post("/mcp", (req, res) => {
-    (async () => {
-      try {
-        if (process.env.DEBUG === "true") {
-          const names = Object.keys((server as any)._registeredTools ?? {});
-          console.log("[DEBUG] visible tools:", names);
-          console.log("[DEBUG] incoming request body:", JSON.stringify(req.body));
-        }
-
-        // For each POST, create a temporary, stateless transport to handle the request/response cycle.
-        const httpTransport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: undefined, // Ensures stateless operation
+  // GET /mcp → Establish SSE stream for HTTP+SSE transport
+  app.get("/mcp", async (req, res) => {
+    try {
+      const acceptHeader = req.headers.accept || "";
+      
+      if (!acceptHeader.includes("text/event-stream")) {
+        res.status(406).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32000,
+            message: "Not Acceptable: GET /mcp requires Accept: text/event-stream"
+          },
+          id: null
         });
-
-        // Connect the server to the transport. This wires the server's internal `_handleRequest`
-        // method to the transport's `onmessage` event.
-        await server.connect(httpTransport);
-
-        // Handle the request. The transport will receive the request, pass it to the server via
-        // `onmessage`, receive the response from the server via its `send` method, and then
-        // write the response back to the client over the HTTP connection.
-        await httpTransport.handleRequest(req, res, req.body);
-
-        // After responding to initialize, send tool catalogue again so the freshly initialised
-        // client is guaranteed to see it (the first notification may have been sent before it
-        // started listening on the SSE stream).
-        if (req.body?.method === "initialize") {
-          if (process.env.DEBUG === "true") {
-            console.log("[DEBUG] initialize handled -> sending tools/list_changed again");
-          }
-          await server.sendToolListChanged();
+        return;
+      }
+      
+      if (process.env.DEBUG === "true") {
+        console.log("[DEBUG] Establishing HTTP+SSE connection via GET /mcp");
+      }
+      
+      // Create SSE transport - it will generate its own sessionId
+      const transport = new DebugSSETransport("/mcp", res);
+      
+      // Store the transport by its sessionId for POST request routing
+      sseTransports.set(transport.sessionId, transport);
+      
+      if (process.env.DEBUG === "true") {
+        console.log(`[DEBUG] Created SSE transport with sessionId: ${transport.sessionId}`);
+      }
+      
+      // Set up cleanup when connection closes
+      res.on("close", () => {
+        sseTransports.delete(transport.sessionId);
+        if (process.env.DEBUG === "true") {
+          console.log(`[DEBUG] Cleaned up SSE transport: ${transport.sessionId}`);
         }
-      } catch (error: any) {
-        console.error("Error handling MCP request:", error);
-        if (!res.headersSent) {
-          res.status(500).json({
+      });
+      
+      // Connect server to transport (this automatically calls transport.start())
+      await server.connect(transport);
+      
+      // Send initial tool list
+      server.sendToolListChanged();
+      
+      if (process.env.DEBUG === "true") {
+        console.log("[DEBUG] HTTP+SSE connection established and ready");
+      }
+      
+    } catch (error) {
+      console.error("Error in GET /mcp:", error);
+      if (!res.headersSent) res.status(500).end();
+    }
+  });
+
+  // POST /mcp → Handle both StreamableHTTP and HTTP+SSE POST requests
+  app.post("/mcp", async (req, res) => {
+    try {
+      const acceptHeader = req.headers.accept || "";
+      const sessionId = req.query.sessionId as string; // SSE uses query param
+      const mcpSessionId = req.headers["mcp-session-id"] as string; // StreamableHTTP uses header
+      const isInitialize = req.body?.method === "initialize";
+      
+      if (process.env.DEBUG === "true") {
+        console.log(`[DEBUG] POST /mcp - Accept: ${acceptHeader}, SessionId: ${sessionId}, MCP-Session-Id: ${mcpSessionId}, Method: ${req.body?.method}`);
+      }
+      
+      // Check if this is an SSE transport POST (has sessionId query param)
+      if (sessionId) {
+        // This is an HTTP+SSE transport POST request
+        const transport = sseTransports.get(sessionId);
+        if (!transport) {
+          res.status(400).json({
             jsonrpc: "2.0",
             error: {
-              code: -32603,
-              message: "Internal server error",
-              data: error.message,
+              code: -32000,
+              message: `Invalid or expired SSE session: ${sessionId}`
             },
-            id: req.body?.id || null,
+            id: req.body?.id || null
           });
+          return;
+        }
+        
+        if (process.env.DEBUG === "true") {
+          console.log(`[DEBUG] Routing POST to SSE transport: ${sessionId}`);
+        }
+        
+        // Route to the SSE transport's handlePostMessage method
+        await transport.handlePostMessage(req, res, req.body);
+        
+      } else {
+        // This is a StreamableHTTP transport request
+        if (process.env.DEBUG === "true") {
+          console.log("[DEBUG] Handling StreamableHTTP POST request");
+        }
+        
+        const httpTransport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: undefined, // Stateless operation
+        });
+        
+        await server.connect(httpTransport);
+        
+        // Set response headers
+        res.setHeader("Content-Type", "application/json");
+        
+        await httpTransport.handleRequest(req, res, req.body);
+        
+        if (isInitialize) {
+          server.sendToolListChanged();
         }
       }
-    })().catch((err) => {
-      console.error("POST /mcp error:", err);
-      if (!res.headersSent) res.status(500).end();
-    });
+      
+    } catch (error) {
+      console.error("Error in POST /mcp:", error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32603,
+            message: "Internal server error",
+            data: error instanceof Error ? error.message : String(error)
+          },
+          id: req.body?.id || null
+        });
+      }
+    }
   });
 
-  // DELETE /mcp → stateless: acknowledge only
+  // DELETE /mcp → Session termination for SSE transports
   app.delete("/mcp", (req, res) => {
-    const sessionId =
-      req.header("Mcp-Session-Id") ||
-      req.header("mcp-session-id") ||
-      (req.query.sessionId as string);
-    if (process.env.DEBUG === "true") {
-      console.log("[DEBUG] [DELETE /mcp] Incoming sessionId:", sessionId);
+    const sessionId = req.query.sessionId as string; // SSE
+    
+    if (sessionId) {
+      // Terminate SSE transport
+      const transport = sseTransports.get(sessionId);
+      if (transport) {
+        transport.close();
+        sseTransports.delete(sessionId);
+        if (process.env.DEBUG === "true") {
+          console.log(`[DEBUG] Terminated SSE session: ${sessionId}`);
+        }
+      }
     }
+    
     res.status(204).end();
   });
 
   const port = process.env.PORT || 8787;
   app.listen(port, () => {
     console.log(`🚀 Gravatar MCP Server listening on port ${port}`);
-    console.log(`📡 SSE endpoint: http://localhost:${port}/mcp`);
+    console.log(`📡 MCP endpoint: http://localhost:${port}/mcp`);
     console.log(`🩺 Health check: http://localhost:${port}/health`);
+    console.log(`✨ Supports: StreamableHTTP + HTTP+SSE (backwards compatible)`);
   });
 };
