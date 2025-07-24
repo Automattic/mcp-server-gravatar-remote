@@ -12,7 +12,7 @@ import {
   interestsOutputShape,
   profileInputShape,
   emailInputShape,
-} from "./schemas/mcp-schemas.js";
+} from "./schemas.js";
 import { generateIdentifier } from "./common/utils.js";
 import { getProfile } from "./tools/profile-utils.js";
 import { getInferredInterests } from "./tools/experimental-utils.js";

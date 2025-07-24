@@ -5,12 +5,12 @@
  * Uses type assertion to restore .shape access for MCP tool registration.
  */
 
-import { profileSchema } from "../generated/schemas/profileSchema.js";
-import { interestSchema } from "../generated/schemas/interestSchema.js";
+import { profileSchema } from "./generated/schemas/profileSchema.js";
+import { interestSchema } from "./generated/schemas/interestSchema.js";
 import {
   getProfileByIdPathParamsSchema,
   getProfileInferredInterestsByIdPathParamsSchema,
-} from "../generated/schemas/index.js";
+} from "./generated/schemas/index.js";
 import { z } from "zod";
 
 // Output schemas for MCP tools (cast to restore .shape access)

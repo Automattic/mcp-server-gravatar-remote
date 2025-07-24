@@ -4,7 +4,7 @@ describe("MCP Schema Integration Tests", () => {
   describe("Schema Integration", () => {
     it("should import and use generated schemas", async () => {
       const { profileOutputSchema, interestsOutputSchema, profileInputShape, emailInputShape } =
-        await import("../../src/schemas/mcp-schemas.js");
+        await import("../../src/schemas.js");
 
       // Test that schemas are properly structured for MCP tool registration
       expect(profileOutputSchema.shape).toBeDefined();
@@ -22,7 +22,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should handle schema validation in tool context", async () => {
-      const { emailInputShape } = await import("../../src/schemas/mcp-schemas.js");
+      const { emailInputShape } = await import("../../src/schemas.js");
 
       // Test email validation that would be used by MCP tools
       const validEmail = "test@example.com";
@@ -46,7 +46,7 @@ describe("MCP Schema Integration Tests", () => {
 
   describe("Schema Passthrough Behavior", () => {
     it("should allow extra properties in profile output schema", async () => {
-      const { profileOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { profileOutputSchema } = await import("../../src/schemas.js");
 
       // Mock profile data with required fields
       const baseProfile = {
@@ -85,7 +85,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should allow extra properties in interests output schema", async () => {
-      const { interestsOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { interestsOutputSchema } = await import("../../src/schemas.js");
 
       // Mock interests data with extra fields (like the real 'slug' field)
       const interestsWithExtraFields = {
@@ -122,7 +122,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should still validate required fields in profile schema", async () => {
-      const { profileOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { profileOutputSchema } = await import("../../src/schemas.js");
 
       // Test that required fields are still enforced
       const incompleteProfile = {
@@ -142,7 +142,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should still validate required fields in interests schema", async () => {
-      const { interestsOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { interestsOutputSchema } = await import("../../src/schemas.js");
 
       // Test that required fields are still enforced
       const incompleteInterests = {
