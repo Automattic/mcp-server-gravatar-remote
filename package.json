@@ -25,13 +25,11 @@
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "1.15.1",
 		"express": "^4.19.2",
-		"cors": "^2.8.5",
 		"zod": "^3.25.67"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",
 		"@types/express": "^4.17.21",
-		"@types/cors": "^2.8.17",
 		"@types/node": "^24.0.10",
 		"@kubb/core": "^3.15.0",
 		"@kubb/plugin-client": "^3.15.0",
