@@ -43,11 +43,9 @@ export const createHttpTransport = (server: McpServer) => {
   // DNS rebinding protection configuration (shared across requests)
   const isDevelopment = env.NODE_ENV !== "production";
   const enableDnsRebinding = env.ENABLE_DNS_REBINDING_PROTECTION === "true"; // Default: false (matches SDK)
-  
+
   const defaultHosts = isDevelopment ? ["localhost:8787", "127.0.0.1:8787"] : [];
-  const defaultOrigins = isDevelopment
-    ? ["http://localhost:8787", "http://127.0.0.1:8787"]
-    : [];
+  const defaultOrigins = isDevelopment ? ["http://localhost:8787", "http://127.0.0.1:8787"] : [];
 
   // Health check endpoint
   app.get("/health", (_req, res) => {
@@ -87,10 +85,10 @@ export const createHttpTransport = (server: McpServer) => {
       if (process.env.DEBUG === "true") {
         console.log(`[DEBUG] POST /mcp - Method: ${req.body?.method}`);
         console.log("[DEBUG] Request headers:", {
-          "host": req.headers.host,
-          "origin": req.headers.origin,
-          "referer": req.headers.referer,
-          "user-agent": req.headers["user-agent"]
+          host: req.headers.host,
+          origin: req.headers.origin,
+          referer: req.headers.referer,
+          "user-agent": req.headers["user-agent"],
         });
         const names = Object.keys((server as any)._registeredTools ?? {});
         console.log("[DEBUG] visible tools:", names);
@@ -134,8 +132,13 @@ export const createHttpTransport = (server: McpServer) => {
   const host = env.HOST || (env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 
   app.listen(port, host, () => {
+    if (process.env.DEBUG === "true") {
+      console.log("🐞 Debug Logging: Enabled");
+    }
     console.log(`🚀 Gravatar MCP Server listening on ${host}:${port}`);
-    console.log(`🔒 DNS Rebinding Protection: ${enableDnsRebinding ? "✅ Enabled" : "❌ Disabled"}`)
+    console.log(
+      `🔒 DNS Rebinding Protection: ${enableDnsRebinding ? "✅ Enabled" : "❌ Disabled"}`,
+    );
     console.log(
       `📡 MCP endpoint: http://${host === "0.0.0.0" ? "your-domain.com" : "localhost"}:${port}/mcp`,
     );
