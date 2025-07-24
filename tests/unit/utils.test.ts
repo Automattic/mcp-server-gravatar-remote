@@ -100,16 +100,16 @@ describe("generateIdentifier", () => {
     await expect(generateIdentifier("   ")).rejects.toThrow(EmptyStringError);
   });
 
-  it("should use mocked crypto.subtle.digest", async () => {
+  it("should generate valid SHA256 hash", async () => {
     const email = "test@example.com";
     const hash = await generateIdentifier(email);
 
-    // Our mock now returns hash based on input content
     // Should be a valid 64-character hex string
     expect(hash).toMatch(/^[a-f0-9]{64}$/);
 
-    // Verify crypto.subtle.digest was called with Uint8Array (from TextEncoder)
-    expect(crypto.subtle.digest).toHaveBeenCalledWith("SHA-256", expect.any(Uint8Array));
+    // Should produce the expected hash for this email
+    // SHA256 of "test@example.com" should be consistent
+    expect(hash).toBe("973dfe463ec85785f5f95af5ba3906eedb2d931c24e69824a89ea65dba4e813b");
   });
 
   it("should handle special characters in email", async () => {

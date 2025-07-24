@@ -1,6 +1,6 @@
 /**
  * Centralized configuration for Gravatar MCP server
- * Adapted for Cloudflare Workers environment
+ * Adapted for Node.js environment
  */
 
 import { getEnv, type Env } from "../common/env.js";
@@ -31,7 +31,7 @@ export const config = {
  */
 export function getServerInfo() {
   return {
-    name: `${env.MCP_SERVER_NAME}`,
+    name: env.MCP_SERVER_NAME || "gravatar-mcp-server",
     version: VERSION,
   };
 }
@@ -46,6 +46,13 @@ export function setClientInfo(
 ) {
   _clientInfo = clientInfo;
   _clientCapabilities = clientCapabilities;
+}
+
+/**
+ * Check if client info has been captured yet
+ */
+export function hasClientInfo(): boolean {
+  return _clientInfo !== undefined;
 }
 
 /**
@@ -80,6 +87,10 @@ export function generateUserAgent(): string {
   const capabilitiesString = capabilities.length > 0 ? capabilities.join("; ") : "none";
   userAgent += ` (${capabilitiesString})`;
 
+  if (env.DEBUG === "true") {
+    console.log("[DEBUG] Generated User-Agent:", userAgent);
+  }
+
   return userAgent;
 }
 
@@ -97,6 +108,13 @@ export function getApiHeaders(apiKey?: string): Record<string, string> {
 
   if (apiKey && apiKey.trim() !== "") {
     headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  if (env.DEBUG === "true") {
+    console.log("[DEBUG] API Headers:", {
+      "User-Agent": headers["User-Agent"],
+      Authorization: apiKey ? "Bearer ***" : "(none)",
+    });
   }
 
   return headers;

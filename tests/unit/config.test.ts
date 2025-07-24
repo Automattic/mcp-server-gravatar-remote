@@ -13,12 +13,12 @@ vi.mock("../../src/common/version.js", () => ({
   VERSION: "99.99.99",
 }));
 
-// Mock Cloudflare Workers environment
-vi.mock("cloudflare:workers", () => ({
-  env: {
-    ENVIRONMENT: "development",
-    MCP_SERVER_NAME: "Gravatar-MCP-Server",
-  },
+// Mock Node.js environment
+vi.mock("../../src/common/env.js", () => ({
+  getEnv: () => ({
+    MCP_SERVER_NAME: "gravatar-mcp-server",
+    DEBUG: "false",
+  }),
 }));
 
 describe("config", () => {
@@ -48,7 +48,7 @@ describe("getServerInfo", () => {
     const serverInfo = getServerInfo();
 
     expect(serverInfo).toEqual({
-      name: "Gravatar-MCP-Server",
+      name: "gravatar-mcp-server",
       version: "99.99.99",
     });
   });
@@ -80,7 +80,7 @@ describe("getApiHeaders", () => {
     const headers = getApiHeaders();
 
     expect(headers).toHaveProperty("User-Agent");
-    expect(headers["User-Agent"]).toBe("Gravatar-MCP-Server/99.99.99 unknown/unknown (none)");
+    expect(headers["User-Agent"]).toBe("gravatar-mcp-server/99.99.99 unknown/unknown (none)");
   });
 
   it("should return headers with Accept application/json", () => {
@@ -101,7 +101,7 @@ describe("getApiHeaders", () => {
     const headers = getApiHeaders();
 
     expect(headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
     });
@@ -120,7 +120,7 @@ describe("getApiHeaders", () => {
     const headers = getApiHeaders(apiKey);
 
     expect(headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
@@ -132,7 +132,7 @@ describe("getApiHeaders", () => {
 
     expect(headers).not.toHaveProperty("Authorization");
     expect(headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
     });
@@ -143,7 +143,7 @@ describe("getApiHeaders", () => {
 
     expect(headers).not.toHaveProperty("Authorization");
     expect(headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
     });
@@ -215,8 +215,8 @@ describe("configuration integration", () => {
 
     // User agent (now generated dynamically) should identify the service
     const userAgent = generateUserAgent();
-    expect(userAgent).toContain("Gravatar");
-    expect(userAgent).toContain("MCP");
+    expect(userAgent).toContain("gravatar");
+    expect(userAgent).toContain("mcp");
   });
 
   it("should generate User-Agent with proper format", () => {
@@ -224,7 +224,7 @@ describe("configuration integration", () => {
 
     // Should follow: Server-name/version MCP-client-name/version (capabilities)
     expect(userAgent).toMatch(/^.+\/[\d.]+\s.+\/[\w.]+\s\(.+\)$/);
-    expect(userAgent).toContain("Gravatar-MCP-Server");
+    expect(userAgent).toContain("gravatar-mcp-server");
     expect(userAgent).toContain("99.99.99");
   });
 });
@@ -238,7 +238,7 @@ describe("generateUserAgent", () => {
   it("should generate User-Agent without client info", () => {
     const userAgent = generateUserAgent();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 unknown/unknown (none)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 unknown/unknown (none)");
   });
 
   it("should generate User-Agent with client info but no capabilities", () => {
@@ -250,7 +250,7 @@ describe("generateUserAgent", () => {
     setClientInfo(clientInfo, undefined);
     const userAgent = generateUserAgent();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 Claude-Code/2.1.0 (none)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 Claude-Code/2.1.0 (none)");
   });
 
   it("should generate User-Agent with client info and capabilities", () => {
@@ -268,7 +268,7 @@ describe("generateUserAgent", () => {
     const userAgent = generateUserAgent();
 
     expect(userAgent).toBe(
-      "Gravatar-MCP-Server/99.99.99 Claude-Code/2.1.0 (sampling; elicitation; roots)",
+      "gravatar-mcp-server/99.99.99 Claude-Code/2.1.0 (sampling; elicitation; roots)",
     );
   });
 
@@ -284,7 +284,7 @@ describe("generateUserAgent", () => {
     setClientInfo(clientInfo, capabilities);
     const userAgent = generateUserAgent();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 VSCode-MCP/unknown (experimental)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 VSCode-MCP/unknown (experimental)");
   });
 
   it("should handle client info with missing name", () => {
@@ -300,7 +300,7 @@ describe("generateUserAgent", () => {
     setClientInfo(clientInfo, capabilities);
     const userAgent = generateUserAgent();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 unknown/1.0.0 (sampling; roots)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 unknown/1.0.0 (sampling; roots)");
   });
 
   it("should handle all possible capabilities", () => {
@@ -319,7 +319,7 @@ describe("generateUserAgent", () => {
     const userAgent = generateUserAgent();
 
     expect(userAgent).toBe(
-      "Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (sampling; elicitation; roots; experimental)",
+      "gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (sampling; elicitation; roots; experimental)",
     );
   });
 
@@ -333,7 +333,7 @@ describe("generateUserAgent", () => {
     setClientInfo(clientInfo, capabilities);
     const userAgent = generateUserAgent();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (none)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (none)");
   });
 
   it("should follow correct format pattern", () => {
@@ -362,7 +362,7 @@ describe("setClientInfo", () => {
 
   it("should update client info and affect User-Agent generation", () => {
     // Initially no client info
-    expect(generateUserAgent()).toBe("Gravatar-MCP-Server/99.99.99 unknown/unknown (none)");
+    expect(generateUserAgent()).toBe("gravatar-mcp-server/99.99.99 unknown/unknown (none)");
 
     // Set client info
     const clientInfo = {
@@ -376,7 +376,7 @@ describe("setClientInfo", () => {
     setClientInfo(clientInfo, capabilities);
 
     // Should now include client info
-    expect(generateUserAgent()).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (sampling)");
+    expect(generateUserAgent()).toBe("gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (sampling)");
   });
 
   it("should allow clearing client info", () => {
@@ -387,12 +387,12 @@ describe("setClientInfo", () => {
     };
     setClientInfo(clientInfo, { sampling: {} });
 
-    expect(generateUserAgent()).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (sampling)");
+    expect(generateUserAgent()).toBe("gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (sampling)");
 
     // Clear client info
     setClientInfo(undefined, undefined);
 
-    expect(generateUserAgent()).toBe("Gravatar-MCP-Server/99.99.99 unknown/unknown (none)");
+    expect(generateUserAgent()).toBe("gravatar-mcp-server/99.99.99 unknown/unknown (none)");
   });
 
   it("should handle partial updates", () => {
@@ -403,7 +403,7 @@ describe("setClientInfo", () => {
     };
     setClientInfo(clientInfo, undefined);
 
-    expect(generateUserAgent()).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (none)");
+    expect(generateUserAgent()).toBe("gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (none)");
 
     // Update with capabilities
     const capabilities = {
@@ -413,7 +413,7 @@ describe("setClientInfo", () => {
     setClientInfo(clientInfo, capabilities);
 
     expect(generateUserAgent()).toBe(
-      "Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (elicitation; roots)",
+      "gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (elicitation; roots)",
     );
   });
 });
@@ -427,7 +427,7 @@ describe("User-Agent integration with API headers", () => {
   it("should use generated User-Agent in API headers without client info", () => {
     const headers = getApiHeaders();
 
-    expect(headers["User-Agent"]).toBe("Gravatar-MCP-Server/99.99.99 unknown/unknown (none)");
+    expect(headers["User-Agent"]).toBe("gravatar-mcp-server/99.99.99 unknown/unknown (none)");
   });
 
   it("should use generated User-Agent in API headers with client info", () => {
@@ -444,7 +444,7 @@ describe("User-Agent integration with API headers", () => {
     const headers = getApiHeaders();
 
     expect(headers["User-Agent"]).toBe(
-      "Gravatar-MCP-Server/99.99.99 Claude-Code/2.1.0 (sampling; elicitation)",
+      "gravatar-mcp-server/99.99.99 Claude-Code/2.1.0 (sampling; elicitation)",
     );
   });
 
@@ -461,7 +461,7 @@ describe("User-Agent integration with API headers", () => {
     const requestConfig = getRequestConfig();
 
     expect(requestConfig.headers["User-Agent"]).toBe(
-      "Gravatar-MCP-Server/99.99.99 VSCode-MCP/1.5.2 (experimental)",
+      "gravatar-mcp-server/99.99.99 VSCode-MCP/1.5.2 (experimental)",
     );
   });
 
@@ -481,7 +481,7 @@ describe("User-Agent integration with API headers", () => {
     const headers = getApiHeaders();
     const requestConfig = getRequestConfig();
 
-    expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (sampling; roots)");
+    expect(userAgent).toBe("gravatar-mcp-server/99.99.99 Test-Client/1.0.0 (sampling; roots)");
     expect(headers["User-Agent"]).toBe(userAgent);
     expect(requestConfig.headers["User-Agent"]).toBe(userAgent);
   });
@@ -512,7 +512,7 @@ describe("getRequestConfig", () => {
 
     expect(requestConfig).toHaveProperty("headers");
     expect(requestConfig.headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
     });
@@ -524,7 +524,7 @@ describe("getRequestConfig", () => {
 
     expect(requestConfig).toHaveProperty("headers");
     expect(requestConfig.headers).toEqual({
-      "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+      "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
       Accept: "application/json",
       "Content-Type": "application/json",
       Authorization: `Bearer ${apiKey}`,
@@ -551,7 +551,7 @@ describe("getRequestConfig", () => {
       baseURL: "https://api.gravatar.com/v3",
       timeout: 30000,
       headers: {
-        "User-Agent": "Gravatar-MCP-Server/99.99.99 unknown/unknown (none)",
+        "User-Agent": "gravatar-mcp-server/99.99.99 unknown/unknown (none)",
         Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
