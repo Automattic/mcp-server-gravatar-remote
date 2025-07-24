@@ -265,6 +265,79 @@ npm run dev:http
 
 This will start the HTTP server at `http://localhost:8787` with hot reloading enabled.
 
+### Transport Modes
+
+This server supports two transport modes:
+
+- **STDIO Mode (Default)**: Standard MCP transport using stdin/stdout. Works with all standard MCP clients and is the recommended mode for local development.
+- **HTTP Mode**: StreamableHTTP transport for remote MCP clients. Useful for web-based clients or when you need to access the server over a network.
+
+### HTTP Server Mode
+
+To run the server in HTTP mode for remote MCP clients:
+
+#### Starting the HTTP Server
+
+```bash
+# Development with hot reloading
+npm run dev:http
+
+# Production (built)
+npm run start:http
+```
+
+#### HTTP Endpoints
+
+- **MCP Endpoint**: `http://localhost:8787/mcp` - StreamableHTTP transport for MCP clients
+- **Health Check**: `http://localhost:8787/health` - Simple health check endpoint
+
+#### Environment Configuration
+
+Create a `.env` file to configure the HTTP server:
+
+```bash
+# Transport mode
+MCP_TRANSPORT=http
+
+# Server configuration
+HOST=127.0.0.1         # Use 0.0.0.0 for external access
+PORT=8787               # Default port
+
+# Security (especially important for development)
+ENABLE_DNS_REBINDING_PROTECTION=true
+ALLOWED_HOSTS=localhost:8787,127.0.0.1:8787
+ALLOWED_ORIGINS=http://localhost:8787,http://127.0.0.1:8787
+
+# Debug output
+DEBUG=true
+```
+
+#### Security Note
+
+DNS rebinding protection is especially important for developers since local development environments are more vulnerable to attacks. However, there's currently a bug with MCP Inspector that prevents it from working with rebinding protection enabled, as it doesn't include the required `Origin` header. 
+
+**For MCP Inspector usage**: Temporarily disable rebinding protection by commenting out `ENABLE_DNS_REBINDING_PROTECTION=true` in your `.env` file.
+
+#### Connecting MCP Clients
+
+**Claude Desktop:**
+Claude Desktop requires HTTPS for remote MCP servers, which local development doesn't support. Use the mcp-remote proxy instead:
+
+```json
+{
+  "mcpServers": {
+    "gravatar": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:8787/mcp"]
+    }
+  }
+}
+```
+
+**Other MCP Clients (Direct StreamableHTTP):**
+- URL: `http://localhost:8787/mcp`
+- Transport: `streamable-http`
+
 ### Available Scripts
 
 - `npm run dev` - Start development server in STDIO mode (standard MCP)
