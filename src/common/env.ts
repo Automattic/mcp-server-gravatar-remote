@@ -6,6 +6,7 @@ export function getEnv<T>(): T {
 export interface Env {
   NODE_ENV?: "development" | "staging" | "production";
   MCP_SERVER_NAME?: string;
+  MCP_TRANSPORT?: "stdio" | "http";
   GRAVATAR_API_KEY?: string;
   PORT?: string;
   HOST?: string;

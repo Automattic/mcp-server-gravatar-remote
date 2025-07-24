@@ -4,14 +4,46 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Remote Gravatar MCP Server** built as a Node.js application. It implements the Model Context Protocol (MCP) to provide global access to Gravatar avatars, profiles, and AI-inferred interests. The server runs as an Express.js application with StreamableHTTP transport for modern MCP clients.
+This is a **Gravatar MCP Server** built as a Node.js application. It implements the Model Context Protocol (MCP) to provide access to Gravatar avatars, profiles, and AI-inferred interests. The server supports both STDIO transport (local MCP) and StreamableHTTP transport for remote clients.
 
 ## Essential Development Commands
 
 ### Development
-- `npm run dev` - Start development server with hot reloading at http://localhost:8787
-- `npm run start` - Start built server from dist/ directory
+- `npm run dev` - Start development server in STDIO mode (default, standard MCP)
+- `npm run dev:http` - Start development server in HTTP mode at http://localhost:8787
+- `npm run start` - Start built server in STDIO mode (default)
+- `npm run start:http` - Start built server in HTTP mode 
 - `npm run build` - Build TypeScript to JavaScript in dist/
+
+### MCP Inspector (Testing)
+- `npm run inspector` - Launch MCP Inspector with STDIO transport
+- `npm run inspector:http` - Launch MCP Inspector with HTTP transport
+
+**HTTP Inspector Usage:**
+```bash
+# Terminal 1: Start HTTP server
+npm run dev:http
+
+# Terminal 2: Launch inspector
+npm run inspector:http
+```
+
+**Manual Configuration (First Time Setup):**
+
+The inspector web interface remembers your settings. Configure once:
+
+**STDIO Mode (`npm run inspector`):**
+1. In the web interface, set:
+   - Transport: `stdio` (default)
+   - Command: `tsx`
+   - Arguments: `--env-file=.env src/index.ts`
+2. Click "Connect" - settings will be saved for future use
+
+**HTTP Mode (`npm run inspector:http`):**
+1. In the web interface, set:
+   - Transport: `streamable-http`
+   - URL: `http://localhost:8787/mcp`
+2. Click "Connect" - settings will be saved for future use
 
 ### Code Quality
 - `npm run lint` - Run Biome linting

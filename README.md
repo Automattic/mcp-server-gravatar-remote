@@ -251,23 +251,71 @@ This file is automatically loaded during local development and should not be com
 
 ### Local Development
 
-Start the development server:
+Start the development server in STDIO mode (default):
 
 ```bash
 npm run dev
 ```
 
-This will start the server at `http://localhost:8787` with hot reloading enabled.
+Or start in HTTP mode:
+
+```bash
+npm run dev:http
+```
+
+This will start the HTTP server at `http://localhost:8787` with hot reloading enabled.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server with hot reloading
-- `npm run deploy` - Deploy to Cloudflare Workers
+- `npm run dev` - Start development server in STDIO mode (standard MCP)
+- `npm run dev:http` - Start development server in HTTP mode
+- `npm run start` - Start built server in STDIO mode
+- `npm run start:http` - Start built server in HTTP mode
+- `npm run build` - Build TypeScript to JavaScript
 - `npm run type-check` - Run TypeScript type checking
 - `npm run lint` - Run code linting
 - `npm run lint:fix` - Run linting with auto-fix
 - `npm run format` - Format code with Biome
-- `npm run extract-schemas` - Generate MCP schemas from OpenAPI spec
+
+### MCP Inspector (Testing)
+
+- `npm run inspector` - Launch MCP Inspector with STDIO transport
+- `npm run inspector:http` - Launch MCP Inspector with HTTP transport
+
+#### Inspector Usage: STDIO
+```bash
+# Terminal 1: Start STDIO server
+npm run dev
+
+# Terminal 2: Launch inspector
+npm run inspector
+```
+
+#### Inspector Usage: StreamableHTTP
+```bash
+# Terminal 1: Start HTTP server
+npm run dev:http
+
+# Terminal 2: Launch inspector
+npm run inspector:http
+```
+
+**Manual Configuration (First Time Setup):**
+
+The inspector web interface remembers your settings. Configure once:
+
+**STDIO Mode (`npm run inspector`):**
+1. In the web interface, set:
+   - Transport: `stdio` (default)
+   - Command: `tsx`
+   - Arguments: `--env-file=.env src/index.ts`
+2. Click "Connect" - settings will be saved for future use
+
+**HTTP Mode (`npm run inspector:http`):**
+1. In the web interface, set:
+   - Transport: `streamable-http`
+   - URL: `http://localhost:8787/mcp`
+2. Click "Connect" - settings will be saved for future use
 
 ### Building from Source
 
