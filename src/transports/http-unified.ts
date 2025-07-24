@@ -27,8 +27,16 @@ import { getServerInfo } from "../config/server-config.js";
 import { getEnv, type Env } from "../common/env.js";
 // Debug subclass that logs every payload sent over SSE
 class DebugSSETransport extends SSEServerTransport {
+  constructor(
+    path: string,
+    response: any,
+    private debugEnabled: boolean,
+  ) {
+    super(path, response);
+  }
+
   override async send(payload: any) {
-    if (process.env.DEBUG === "true") {
+    if (this.debugEnabled) {
       console.log("[DEBUG] SSE out ->", JSON.stringify(payload));
     }
     return super.send(payload);
@@ -61,12 +69,12 @@ export const createHttpTransport = (server: McpServer) => {
   // GET /mcp → SSE stream for StreamableHTTP server-to-client notifications
   app.get("/mcp", (_req, res) => {
     (async () => {
-      if (process.env.DEBUG === "true") {
+      if (env.DEBUG === "true") {
         console.log("[DEBUG] StreamableHTTP SSE stream request");
       }
       // Create SSE transport for server-to-client notifications
-      const transport = new DebugSSETransport("/mcp", res);
-      if (process.env.DEBUG === "true") {
+      const transport = new DebugSSETransport("/mcp", res, env.DEBUG === "true");
+      if (env.DEBUG === "true") {
         console.log("[DEBUG] Created SSE transport for StreamableHTTP notifications");
       }
       await server.connect(transport);
@@ -82,7 +90,7 @@ export const createHttpTransport = (server: McpServer) => {
   // POST /mcp → StreamableHTTP transport only
   app.post("/mcp", async (req, res) => {
     try {
-      if (process.env.DEBUG === "true") {
+      if (env.DEBUG === "true") {
         console.log(`[DEBUG] POST /mcp - Method: ${req.body?.method}`);
         console.log("[DEBUG] Request headers:", {
           host: req.headers.host,
@@ -132,7 +140,7 @@ export const createHttpTransport = (server: McpServer) => {
   const host = env.HOST || (env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 
   app.listen(port, host, () => {
-    if (process.env.DEBUG === "true") {
+    if (env.DEBUG === "true") {
       console.log("🐞 Debug Logging: Enabled");
     }
     console.log(`🚀 Gravatar MCP Server listening on ${host}:${port}`);

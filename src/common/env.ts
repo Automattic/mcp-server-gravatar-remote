@@ -9,6 +9,7 @@ export interface Env {
   GRAVATAR_API_KEY?: string;
   PORT?: string;
   HOST?: string;
+  DEBUG?: string;
   // Security configuration
   ENABLE_DNS_REBINDING_PROTECTION?: string;
   ALLOWED_HOSTS?: string;

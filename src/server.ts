@@ -6,6 +6,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { getServerInfo, setClientInfo } from "./config/server-config.js";
+import { getEnv, type Env } from "./common/env.js";
 import {
   mcpProfileOutputSchema,
   mcpInterestsOutputSchema,
@@ -31,7 +32,8 @@ export function createServer(): McpServer {
 
     setClientInfo(clientInfo, clientCapabilities);
 
-    if (process.env.DEBUG === "true") {
+    const env = getEnv<Env>();
+    if (env.DEBUG === "true") {
       console.log("[DEBUG] Client info:", {
         name: clientInfo?.name ?? "unknown",
         version: clientInfo?.version ?? "unknown",
