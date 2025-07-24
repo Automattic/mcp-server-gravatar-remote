@@ -38,10 +38,3 @@ export const mcpEmailInputSchema = z.object({
   email: z.string().email().describe("The email address to look up"),
 });
 export const mcpEmailInputShape = mcpEmailInputSchema.shape;
-
-// Type exports for TypeScript usage
-export type McpProfileOutput = z.infer<typeof mcpProfileOutputSchema>;
-export type McpInterestsOutput = z.infer<typeof mcpInterestsOutputSchema>;
-export type McpProfileInput = z.infer<typeof getProfileByIdPathParamsSchema>;
-export type McpInterestsInput = z.infer<typeof getProfileInferredInterestsByIdPathParamsSchema>;
-export type McpEmailInput = z.infer<typeof mcpEmailInputSchema>;
