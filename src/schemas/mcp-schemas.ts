@@ -18,6 +18,7 @@ import { z } from "zod";
 // Without this, new API fields cause validation errors until the spec is updated
 // Trade-off: less strict validation but more resilient to API changes
 export const mcpProfileOutputSchema = (profileSchema as z.ZodObject<any>).passthrough();
+export const mcpProfileOutputShape = mcpProfileOutputSchema.shape;
 
 export const mcpInterestsOutputSchema = z.object({
   interests: z.array(
@@ -27,6 +28,7 @@ export const mcpInterestsOutputSchema = z.object({
     (interestSchema as z.ZodObject<any>).passthrough(),
   ),
 });
+export const mcpInterestsOutputShape = mcpInterestsOutputSchema.shape;
 
 // Input shapes for MCP tools (ZodRawShape format)
 // Now that typed: false is set, we can directly access .shape without casting

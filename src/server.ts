@@ -8,8 +8,8 @@ import { z } from "zod";
 import { getServerInfo, setClientInfo } from "./config/server-config.js";
 import { getEnv, type Env } from "./common/env.js";
 import {
-  mcpProfileOutputSchema,
-  mcpInterestsOutputSchema,
+  mcpProfileOutputShape,
+  mcpInterestsOutputShape,
   mcpProfileInputShape,
   mcpEmailInputShape,
 } from "./schemas/mcp-schemas.js";
@@ -73,7 +73,7 @@ export function createServer(): McpServer {
       description:
         "Retrieve comprehensive Gravatar profile information using an email address. Returns detailed profile data including personal information, social accounts, and avatar details. <examples>'Show me the Gravatar profile for john.doe@example.com' or 'Get profile info for user@company.com.'</examples>",
       inputSchema: mcpEmailInputShape,
-      outputSchema: mcpProfileOutputSchema.shape,
+      outputSchema: mcpProfileOutputShape,
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
@@ -111,7 +111,7 @@ export function createServer(): McpServer {
       description:
         "Retrieve comprehensive Gravatar profile information using a profile identifier. Returns detailed profile data including personal information, social accounts, and avatar details. <examples>'Get the profile for Gravatar user with ID abc123...' or 'Show me the profile for username johndoe.'</examples>",
       inputSchema: mcpProfileInputShape,
-      outputSchema: mcpProfileOutputSchema.shape,
+      outputSchema: mcpProfileOutputShape,
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
@@ -148,7 +148,7 @@ export function createServer(): McpServer {
       description:
         "Retrieve AI-inferred interests for a Gravatar profile using an email address. Returns experimental machine learning-generated interest data based on public profile information. <hint>When searching for interests, prefer to look up the interests in the Gravatar profile over the inferred interests, since they are specified explicitly by the owner of the Gravatar profile.</hint> <examples>'Get the inferred interests for user@example.com' or 'Show me inferred interests for john.doe@company.com.'</examples>",
       inputSchema: mcpEmailInputShape,
-      outputSchema: mcpInterestsOutputSchema.shape,
+      outputSchema: mcpInterestsOutputShape,
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
@@ -193,7 +193,7 @@ export function createServer(): McpServer {
       description:
         "Retrieve AI-inferred interests for a Gravatar profile using a profile identifier. Returns experimental machine learning-generated interest data based on public profile information. <hint>When searching for interests, prefer to look up the interests in the Gravatar profile over the inferred interests, since they are specified explicitly by the owner of the Gravatar profile.</hint> <examples>'Get the inferred interests for user ID abc123...' or 'Show me inferred interests for username johndoe.'</examples>",
       inputSchema: mcpProfileInputShape,
-      outputSchema: mcpInterestsOutputSchema.shape,
+      outputSchema: mcpInterestsOutputShape,
       annotations: {
         readOnlyHint: true,
         openWorldHint: true,
