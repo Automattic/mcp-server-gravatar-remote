@@ -6,11 +6,11 @@ import { registerProfileTools } from "./tools/profiles.js";
 import { registerAvatarImageTools } from "./tools/avatar-images.js";
 import { registerExperimentalTools } from "./tools/experimental.js";
 
-// Environment interface for Cloudflare Workers
-export interface Env {
-  GRAVATAR_API_KEY?: string;
-  ASSETS: Fetcher;
-}
+import { createOAuthProvider } from "./auth/oauth-config.js";
+import type { Env as ConfigEnv } from "./common/env.js";
+
+// Re-export the Env interface from common/env.ts
+export type Env = ConfigEnv;
 
 // Define the MCP agent with Gravatar tools
 export class GravatarMcpServer extends McpAgent<Env> {
@@ -56,18 +56,62 @@ export class GravatarMcpServer extends McpAgent<Env> {
 }
 
 export default {
-  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
 
+    // Handle OAuth routes if OAuth is configured
+    const oauthProvider = createOAuthProvider(env);
+    if (oauthProvider) {
+      // OAuth authorization endpoint
+      if (pathname.startsWith("/oauth/authorize")) {
+        return await oauthProvider.authorize(request);
+      }
+
+      // OAuth callback endpoint
+      if (pathname.startsWith("/oauth/callback")) {
+        return await oauthProvider.callback(request);
+      }
+
+      // OAuth token endpoint
+      if (pathname.startsWith("/oauth/token")) {
+        return await oauthProvider.token(request);
+      }
+    }
+
+    // MCP Server-Sent Events endpoint
     if (pathname.startsWith("/sse")) {
       return GravatarMcpServer.serveSSE("/sse").fetch(request, env, ctx);
     }
 
+    // MCP WebSocket/HTTP endpoint
     if (pathname.startsWith("/mcp")) {
       return GravatarMcpServer.serve("/mcp").fetch(request, env, ctx);
     }
 
-    // Optional: Handle root path or other routes
+    // Root path - provide basic information
+    if (pathname === "/") {
+      return new Response(
+        JSON.stringify({
+          name: "Gravatar MCP Server",
+          version: "0.1.0",
+          endpoints: {
+            mcp: "/mcp",
+            sse: "/sse",
+            ...(oauthProvider
+              ? {
+                  oauth_authorize: "/oauth/authorize",
+                  oauth_callback: "/oauth/callback",
+                  oauth_token: "/oauth/token",
+                }
+              : {}),
+          },
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
     return new Response("Not Found", { status: 404 });
   },
 };
