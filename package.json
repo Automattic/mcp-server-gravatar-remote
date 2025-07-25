@@ -21,6 +21,7 @@
 		"generate-kubb-with-spec": "make download-spec && npx kubb generate"
 	},
 	"dependencies": {
+		"@cloudflare/workers-oauth-provider": "^0.0.5",
 		"@modelcontextprotocol/sdk": "1.15.1",
 		"agents": "^0.0.100",
 		"zod": "^3.25.67"
