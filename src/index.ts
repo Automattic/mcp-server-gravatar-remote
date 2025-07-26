@@ -12,7 +12,7 @@ import {
   confirmConsent,
   tokenExchangeCallback,
   registerClient,
-} from "./auth.js";
+} from "./auth/index.js";
 import { Hono } from "hono";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 
