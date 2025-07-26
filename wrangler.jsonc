@@ -26,6 +26,13 @@
 			}
 		]
 	},
+	"kv_namespaces": [
+		{
+			"binding": "OAUTH_KV",
+			"id": "42a2c2dab0164bb09019745c907a5d09",
+			"preview_id": "42a2c2dab0164bb09019745c907a5d09"
+		}
+	],
 	"observability": {
 		"enabled": true
 	},
@@ -39,8 +46,23 @@
 	 */
 	"vars": {
 		"ENVIRONMENT": "development",
-		"MCP_SERVER_NAME": "mcp-server-gravatar-development"
+		"MCP_SERVER_NAME": "mcp-server-gravatar-development",
+		"NODE_ENV": "development",
+		"OAUTH_AUTHORIZATION_ENDPOINT": "https://public-api.wordpress.com/oauth2/authorize",
+		"OAUTH_TOKEN_ENDPOINT": "https://public-api.wordpress.com/oauth2/token",
+		"OAUTH_USERINFO_ENDPOINT": "https://public-api.wordpress.com/rest/v1.1/me",
+		"OAUTH_SCOPES": "auth gravatar-profile:read",
+		"OAUTH_REDIRECT_URI": "http://localhost:8787/callback"
 	},
+	/**
+	 * OAuth Secrets - Set using: npx wrangler secret put <SECRET_NAME>
+	 * - OAUTH_CLIENT_ID: WordPress.com application client ID
+	 * - OAUTH_CLIENT_SECRET: WordPress.com application client secret  
+	 * - OAUTH_SIGNING_SECRET: Random 32+ character string for JWT signing
+	 * - OAUTH_COOKIE_SECRET: Random 32+ character string for cookie encryption
+	 * 
+	 * Note: OAUTH_REDIRECT_URI is now configured as an environment variable above
+	 */
 	"env": {
 		"staging": {
 			"name": "mcp-server-gravatar-staging",
@@ -52,9 +74,22 @@
 					}
 				]
 			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "7f47118d3e874c68a97d9abc26a2e847",
+					"preview_id": "7f47118d3e874c68a97d9abc26a2e847"
+				}
+			],
 			"vars": {
 				"ENVIRONMENT": "staging",
-				"MCP_SERVER_NAME": "mcp-server-gravatar-staging"
+				"MCP_SERVER_NAME": "mcp-server-gravatar-staging",
+				"NODE_ENV": "staging",
+				"OAUTH_AUTHORIZATION_ENDPOINT": "https://public-api.wordpress.com/oauth2/authorize",
+				"OAUTH_TOKEN_ENDPOINT": "https://public-api.wordpress.com/oauth2/token",
+				"OAUTH_USERINFO_ENDPOINT": "https://public-api.wordpress.com/rest/v1.1/me",
+				"OAUTH_SCOPES": "auth gravatar-profile:read",
+				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar-staging.your-account.workers.dev/callback"
 			}
 		},
 		"production": {
@@ -67,9 +102,22 @@
 					}
 				]
 			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "bdaaa6513a74456da8f789dee326c55b",
+					"preview_id": "bdaaa6513a74456da8f789dee326c55b"
+				}
+			],
 			"vars": {
 				"ENVIRONMENT": "production",
-				"MCP_SERVER_NAME": "mcp-server-gravatar"
+				"MCP_SERVER_NAME": "mcp-server-gravatar",
+				"NODE_ENV": "production",
+				"OAUTH_AUTHORIZATION_ENDPOINT": "https://public-api.wordpress.com/oauth2/authorize",
+				"OAUTH_TOKEN_ENDPOINT": "https://public-api.wordpress.com/oauth2/token",
+				"OAUTH_USERINFO_ENDPOINT": "https://public-api.wordpress.com/rest/v1.1/me",
+				"OAUTH_SCOPES": "auth gravatar-profile:read",
+				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar.your-account.workers.dev/callback"
 			}
 		}
 	},

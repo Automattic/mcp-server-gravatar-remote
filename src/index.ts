@@ -6,8 +6,16 @@ import { registerProfileTools } from "./tools/profiles.js";
 import { registerAvatarImageTools } from "./tools/avatar-images.js";
 import { registerExperimentalTools } from "./tools/experimental.js";
 
-import { createOAuthProvider } from "./auth/oauth-config.js";
 import type { Env as ConfigEnv } from "./common/env.js";
+import {
+  authorize,
+  callback,
+  confirmConsent,
+  tokenExchangeCallback,
+  registerClient,
+} from "./auth.js";
+import { Hono } from "hono";
+import OAuthProvider from "@cloudflare/workers-oauth-provider";
 
 // Re-export the Env interface from common/env.ts
 export type Env = ConfigEnv;
@@ -55,63 +63,67 @@ export class GravatarMcpServer extends McpAgent<Env> {
   }
 }
 
+// Initialize the Hono app with routes for the OAuth Provider
+const app = new Hono<{ Bindings: Env & { OAUTH_PROVIDER: any } }>();
+app.get("/authorize", authorize);
+app.post("/authorize/consent", confirmConsent);
+app.get("/callback", callback);
+app.post("/register", registerClient);
+
+// Root endpoint for basic server info
+app.get("/", (c) => {
+  const serverInfo = getServerInfo();
+  return c.json({
+    name: serverInfo.name,
+    version: serverInfo.version,
+    endpoints: {
+      mcp: "/mcp",
+      sse: "/sse",
+      oauth_authorize: "/authorize",
+      oauth_callback: "/callback",
+      oauth_token: "/token",
+    },
+  });
+});
+
+function createOAuthProviderIfConfigured(env: Env) {
+  // Only create OAuth provider if all required variables are set
+  if (!env.OAUTH_CLIENT_ID || !env.OAUTH_CLIENT_SECRET || !env.OAUTH_AUTHORIZATION_ENDPOINT) {
+    return null;
+  }
+
+  return new OAuthProvider({
+    // @ts-expect-error - Type issues with the OAuth provider library
+    apiHandler: GravatarMcpServer.mount("/sse"),
+    apiRoute: "/sse",
+    authorizeEndpoint: "/authorize",
+    clientRegistrationEndpoint: "/register",
+    tokenEndpoint: "/token",
+    // @ts-expect-error - Type issues with the OAuth provider library
+    defaultHandler: app,
+    tokenExchangeCallback: (options: any) => tokenExchangeCallback(options),
+  });
+}
+
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const { pathname } = new URL(request.url);
+  fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    const oauthProvider = createOAuthProviderIfConfigured(env);
 
-    // Handle OAuth routes if OAuth is configured
-    const oauthProvider = createOAuthProvider(env);
     if (oauthProvider) {
-      // OAuth authorization endpoint
-      if (pathname.startsWith("/oauth/authorize")) {
-        return await oauthProvider.authorize(request);
-      }
-
-      // OAuth callback endpoint
-      if (pathname.startsWith("/oauth/callback")) {
-        return await oauthProvider.callback(request);
-      }
-
-      // OAuth token endpoint
-      if (pathname.startsWith("/oauth/token")) {
-        return await oauthProvider.token(request);
-      }
+      return oauthProvider.fetch(request, env, ctx);
     }
 
-    // MCP Server-Sent Events endpoint
+    // Fallback to basic MCP server without OAuth
+    const { pathname } = new URL(request.url);
+
     if (pathname.startsWith("/sse")) {
       return GravatarMcpServer.serveSSE("/sse").fetch(request, env, ctx);
     }
 
-    // MCP WebSocket/HTTP endpoint
     if (pathname.startsWith("/mcp")) {
       return GravatarMcpServer.serve("/mcp").fetch(request, env, ctx);
     }
 
-    // Root path - provide basic information
-    if (pathname === "/") {
-      return new Response(
-        JSON.stringify({
-          name: "Gravatar MCP Server",
-          version: "0.1.0",
-          endpoints: {
-            mcp: "/mcp",
-            sse: "/sse",
-            ...(oauthProvider
-              ? {
-                  oauth_authorize: "/oauth/authorize",
-                  oauth_callback: "/oauth/callback",
-                  oauth_token: "/oauth/token",
-                }
-              : {}),
-          },
-        }),
-        {
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    return new Response("Not Found", { status: 404 });
+    return app.fetch(request, env, ctx);
   },
 };

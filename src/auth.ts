@@ -1,4 +1,4 @@
-import { getEnv, type Env } from "./common/env.js";
+import { env } from "cloudflare:workers";
 import type {
   AuthRequest,
   OAuthHelpers,
@@ -12,7 +12,29 @@ import * as oauth from "oauth4webapi";
 
 import type { UserProps } from "./types.js";
 
-const env = getEnv<Env>();
+/**
+ * Fetch user info from WordPress.com userinfo endpoint
+ *
+ * WordPress.com OAuth2 is not OpenID Connect compliant and uses custom field names
+ * (e.g., "ID" instead of "sub", "display_name" instead of "name"). This helper
+ * handles the WordPress-specific format that oauth4webapi cannot process.
+ */
+async function fetchWordPressUserInfo(accessToken: string, userinfoEndpoint: string) {
+  const response = await fetch(userinfoEndpoint, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `WordPress user info request failed: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return response.json();
+}
 
 type WordPressAuthRequest = {
   mcpAuthRequest: AuthRequest;
@@ -23,23 +45,34 @@ type WordPressAuthRequest = {
   consentToken: string;
 };
 
-export async function getOidcConfig({
-  issuer,
+export function getWordPressOAuthConfig({
   client_id,
   client_secret,
+  authorization_endpoint,
+  token_endpoint,
+  userinfo_endpoint,
 }: {
-  issuer: string;
   client_id: string;
   client_secret: string;
+  authorization_endpoint: string;
+  token_endpoint: string;
+  userinfo_endpoint?: string;
 }) {
-  const as = await oauth
-    .discoveryRequest(new URL(issuer), { algorithm: "oidc" })
-    .then((response) => oauth.processDiscoveryResponse(new URL(issuer), response));
+  const client: oauth.Client = {
+    client_id,
+    token_endpoint_auth_method: "client_secret_post",
+  };
 
-  const client: oauth.Client = { client_id };
+  const authorizationServer: oauth.AuthorizationServer = {
+    issuer: "https://public-api.wordpress.com",
+    authorization_endpoint,
+    token_endpoint,
+    ...(userinfo_endpoint && { userinfo_endpoint }),
+  };
+
   const clientAuth = oauth.ClientSecretPost(client_secret);
 
-  return { as, client, clientAuth };
+  return { authorizationServer, client, clientAuth };
 }
 
 /**
@@ -82,15 +115,15 @@ export async function authorize(c: Context<{ Bindings: Env & { OAUTH_PROVIDER: O
     httpOnly: true,
     maxAge: 60 * 60 * 1,
     path: "/",
-    sameSite: env.NODE_ENV !== "development" ? "none" : "lax",
-    secure: env.NODE_ENV !== "development", // 1 hour
+    sameSite: c.env.NODE_ENV !== "development" ? "none" : "lax",
+    secure: c.env.NODE_ENV !== "development", // 1 hour
   });
 
   // Extract client information for the consent screen
   const clientName = client.clientName || client.clientId;
   const clientLogo = client.logoUri || ""; // No default logo
   const clientUri = client.clientUri || "#";
-  const requestedScopes = (env.OAUTH_SCOPES || "").split(" ");
+  const requestedScopes = (c.env.OAUTH_SCOPES || "").split(" ");
 
   // Render the consent screen with CSRF protection
   return c.html(
@@ -163,24 +196,26 @@ export async function confirmConsent(
     return c.redirect(redirectUri.toString());
   }
 
-  const { as } = await getOidcConfig({
-    issuer: `https://${env.OAUTH_DOMAIN}/`,
-    client_id: env.OAUTH_CLIENT_ID,
-    client_secret: env.OAUTH_CLIENT_SECRET,
+  const { authorizationServer } = getWordPressOAuthConfig({
+    client_id: c.env.OAUTH_CLIENT_ID!,
+    client_secret: c.env.OAUTH_CLIENT_SECRET!,
+    authorization_endpoint: c.env.OAUTH_AUTHORIZATION_ENDPOINT!,
+    token_endpoint: c.env.OAUTH_TOKEN_ENDPOINT!,
+    userinfo_endpoint: c.env.OAUTH_USERINFO_ENDPOINT,
   });
 
-  // Redirect to Auth0's authorization endpoint
-  const authorizationUrl = new URL(as.authorization_endpoint!);
-  authorizationUrl.searchParams.set("client_id", env.OAUTH_CLIENT_ID);
-  authorizationUrl.searchParams.set("redirect_uri", new URL("/callback", c.req.url).href);
+  // Redirect to WordPress authorization endpoint
+  const authorizationUrl = new URL(authorizationServer.authorization_endpoint!);
+  authorizationUrl.searchParams.set("client_id", c.env.OAUTH_CLIENT_ID!);
+  authorizationUrl.searchParams.set("redirect_uri", c.env.OAUTH_REDIRECT_URI!);
   authorizationUrl.searchParams.set("response_type", "code");
-  authorizationUrl.searchParams.set("audience", env.OAUTH_AUDIENCE);
-  authorizationUrl.searchParams.set("scope", env.OAUTH_SCOPES);
+  authorizationUrl.searchParams.set("scope", c.env.OAUTH_SCOPES || "auth");
   authorizationUrl.searchParams.set("code_challenge", wordPressOAuthAuthRequest.codeChallenge);
   authorizationUrl.searchParams.set("code_challenge_method", "S256");
-  authorizationUrl.searchParams.set("nonce", wordPressOAuthAuthRequest.nonce);
   authorizationUrl.searchParams.set("state", transactionState);
-  return c.redirect(authorizationUrl.href);
+
+  // Use Response.redirect instead of Hono's c.redirect to avoid double encoding
+  return Response.redirect(authorizationUrl.href);
 }
 
 /**
@@ -214,57 +249,77 @@ export async function callback(c: Context<{ Bindings: Env & { OAUTH_PROVIDER: OA
     path: "/",
   });
 
-  const { as, client, clientAuth } = await getOidcConfig({
-    client_id: env.OAUTH_CLIENT_ID,
-    client_secret: env.OAUTH_CLIENT_SECRET,
-    issuer: `https://${env.OAUTH_DOMAIN}/`,
+  const { authorizationServer, client, clientAuth } = getWordPressOAuthConfig({
+    client_id: c.env.OAUTH_CLIENT_ID!,
+    client_secret: c.env.OAUTH_CLIENT_SECRET!,
+    authorization_endpoint: c.env.OAUTH_AUTHORIZATION_ENDPOINT!,
+    token_endpoint: c.env.OAUTH_TOKEN_ENDPOINT!,
+    userinfo_endpoint: c.env.OAUTH_USERINFO_ENDPOINT,
   });
 
   // Perform the Code Exchange
   const params = oauth.validateAuthResponse(
-    as,
+    authorizationServer,
     client,
     new URL(c.req.url),
     wordPressOAuthAuthRequest.transactionState,
   );
   const response = await oauth.authorizationCodeGrantRequest(
-    as,
+    authorizationServer,
     client,
     clientAuth,
     params,
-    new URL("/callback", c.req.url).href,
+    c.env.OAUTH_REDIRECT_URI!,
     wordPressOAuthAuthRequest.codeVerifier,
   );
 
-  // Process the response
-  const result = await oauth.processAuthorizationCodeResponse(as, client, response, {
-    expectedNonce: wordPressOAuthAuthRequest.nonce,
-    requireIdToken: true,
-  });
+  // Process the response (WordPress OAuth2 doesn't use ID tokens)
+  const result = await oauth.processAuthorizationCodeResponse(
+    authorizationServer,
+    client,
+    response,
+  );
 
-  // Get the claims from the id_token
-  const claims = oauth.getValidatedIdTokenClaims(result);
-  if (!claims) {
-    return c.text("Received invalid id_token from Auth0", 400);
+  // Check for OAuth error (result would be an error object if there was one)
+  if ("error" in result) {
+    return c.text(`OAuth error: ${result.error}`, 400);
+  }
+
+  // Fetch user info from WordPress API
+  let userInfo: any = null;
+  if (authorizationServer.userinfo_endpoint && result.access_token) {
+    try {
+      userInfo = await fetchWordPressUserInfo(
+        result.access_token,
+        authorizationServer.userinfo_endpoint,
+      );
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+      return c.text("Failed to fetch user information", 500);
+    }
+  }
+
+  if (!userInfo) {
+    return c.text("No user information available", 400);
   }
 
   // Complete the authorization
-  const { redirectTo } = await env.OAUTH_PROVIDER.completeAuthorization({
+  const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
     metadata: {
-      label: claims.name || claims.email || claims.sub,
+      label: userInfo.display_name || userInfo.email || userInfo.login,
     },
     props: {
-      claims: claims,
+      claims: userInfo,
       tokenSet: {
-        accessToken: result.access_token,
-        accessTokenTTL: result.expires_in,
-        idToken: result.id_token,
-        refreshToken: result.refresh_token,
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+        expires_in: result.expires_in,
+        token_type: result.token_type || "Bearer",
       },
     } as UserProps,
     request: wordPressOAuthAuthRequest.mcpAuthRequest,
     scope: wordPressOAuthAuthRequest.mcpAuthRequest.scope,
-    userId: claims.sub!,
+    userId: userInfo.ID?.toString() || userInfo.login,
   });
 
   return Response.redirect(redirectTo);
@@ -279,10 +334,10 @@ export async function tokenExchangeCallback(
   options: TokenExchangeCallbackOptions,
 ): Promise<TokenExchangeCallbackResult | void> {
   // During the Authorization Code Exchange, we want to make sure that the Access Token issued
-  // by the MCP Server has the same TTL as the one issued by Auth0.
+  // by the MCP Server has the same TTL as the one issued by WordPress.
   if (options.grantType === "authorization_code") {
     return {
-      accessTokenTTL: options.props.tokenSet.accessTokenTTL,
+      accessTokenTTL: options.props.tokenSet.expires_in,
       newProps: {
         ...options.props,
       },
@@ -290,30 +345,49 @@ export async function tokenExchangeCallback(
   }
 
   if (options.grantType === "refresh_token") {
-    const wordPressOAuthRefreshToken = options.props.tokenSet.refreshToken;
-    if (!wordPressOAuthRefreshToken) {
-      throw new Error("No Auth0 refresh token found");
+    const wordPressRefreshToken = options.props.tokenSet.refresh_token;
+    if (!wordPressRefreshToken) {
+      throw new Error("No WordPress refresh token found");
     }
 
-    const { as, client, clientAuth } = await getOidcConfig({
-      client_id: env.OAUTH_CLIENT_ID,
-      client_secret: env.OAUTH_CLIENT_SECRET,
-      issuer: `https://${env.OAUTH_DOMAIN}/`,
+    const { authorizationServer, client, clientAuth } = getWordPressOAuthConfig({
+      client_id: env.OAUTH_CLIENT_ID!,
+      client_secret: env.OAUTH_CLIENT_SECRET!,
+      authorization_endpoint: env.OAUTH_AUTHORIZATION_ENDPOINT!,
+      token_endpoint: env.OAUTH_TOKEN_ENDPOINT!,
+      userinfo_endpoint: env.OAUTH_USERINFO_ENDPOINT,
     });
 
-    // Perform the refresh token exchange with Auth0.
+    // Perform the refresh token exchange with WordPress.
     const response = await oauth.refreshTokenGrantRequest(
-      as,
+      authorizationServer,
       client,
       clientAuth,
-      wordPressOAuthRefreshToken,
+      wordPressRefreshToken,
     );
-    const refreshTokenResponse = await oauth.processRefreshTokenResponse(as, client, response);
+    const refreshTokenResponse = await oauth.processRefreshTokenResponse(
+      authorizationServer,
+      client,
+      response,
+    );
 
-    // Get the claims from the id_token
-    const claims = oauth.getValidatedIdTokenClaims(refreshTokenResponse);
-    if (!claims) {
-      throw new Error("Received invalid id_token from WordPress OAuth");
+    // Check for OAuth error
+    if ("error" in refreshTokenResponse) {
+      throw new Error(`OAuth refresh error: ${refreshTokenResponse.error}`);
+    }
+
+    // Fetch updated user info if available
+    let userInfo = options.props.claims; // fallback to existing claims
+    if (authorizationServer.userinfo_endpoint && refreshTokenResponse.access_token) {
+      try {
+        userInfo = await fetchWordPressUserInfo(
+          refreshTokenResponse.access_token,
+          authorizationServer.userinfo_endpoint!,
+        );
+      } catch (error) {
+        console.warn("Failed to fetch updated user info during refresh:", error);
+        // Continue with existing claims
+      }
     }
 
     // Store the new token set and claims.
@@ -321,15 +395,53 @@ export async function tokenExchangeCallback(
       accessTokenTTL: refreshTokenResponse.expires_in,
       newProps: {
         ...options.props,
-        claims: claims,
+        claims: userInfo,
         tokenSet: {
-          accessToken: refreshTokenResponse.access_token,
-          accessTokenTTL: refreshTokenResponse.expires_in,
-          idToken: refreshTokenResponse.id_token,
-          refreshToken: refreshTokenResponse.refresh_token || wordPressOAuthRefreshToken,
+          access_token: refreshTokenResponse.access_token,
+          expires_in: refreshTokenResponse.expires_in,
+          refresh_token: refreshTokenResponse.refresh_token || wordPressRefreshToken,
+          token_type: refreshTokenResponse.token_type || "Bearer",
         },
       },
     };
+  }
+}
+
+/**
+ * Client Registration Endpoint
+ *
+ * This endpoint handles dynamic client registration for MCP clients
+ */
+export async function registerClient(
+  c: Context<{ Bindings: Env & { OAUTH_PROVIDER: OAuthHelpers } }>,
+) {
+  try {
+    const registrationRequest = await c.req.json();
+
+    // For now, return a simple static response since the OAuth provider
+    // may handle client registration differently
+    // TODO: Implement proper dynamic client registration
+
+    // Generate a simple client ID for testing
+    const clientId = `mcp_client_${Date.now()}`;
+
+    return c.json({
+      client_id: clientId,
+      client_name: registrationRequest.client_name || "MCP Client",
+      redirect_uris: registrationRequest.redirect_uris || [],
+      grant_types: ["authorization_code"],
+      response_types: ["code"],
+      token_endpoint_auth_method: "none", // For public clients
+    });
+  } catch (error) {
+    console.error("Client registration error:", error);
+    return c.json(
+      {
+        error: "invalid_client_metadata",
+        error_description: "Failed to register client",
+      },
+      400,
+    );
   }
 }
 
