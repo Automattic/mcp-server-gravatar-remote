@@ -14,7 +14,6 @@ import { getInferredInterests } from "./tools/experimental-utils.js";
 import { fetchAvatar, avatarParams } from "./tools/avatar-utils.js";
 import { getGravatarIntegrationGuide } from "./resources/integration-guide.js";
 
-import type { Env as ConfigEnv } from "./common/env.js";
 import {
   authorize,
   callback,
@@ -24,9 +23,6 @@ import {
 } from "./auth.js";
 import { Hono } from "hono";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-
-// Re-export the Env interface from common/env.ts
-export type Env = ConfigEnv;
 
 // Define the MCP agent with Gravatar tools
 export class GravatarMcpServer extends McpAgent<Env> {
