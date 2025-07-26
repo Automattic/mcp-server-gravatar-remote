@@ -3,11 +3,9 @@
  * Adapted for Cloudflare Workers environment
  */
 
-import { getEnv, type Env } from "../common/env.js";
+import { env } from "cloudflare:workers";
 import { VERSION } from "../common/version.js";
 import type { Implementation, ClientCapabilities } from "@modelcontextprotocol/sdk/types.js";
-
-const env = getEnv<Env>();
 
 // Store client information for client-aware User-Agent generation
 let _clientInfo: Implementation | undefined;

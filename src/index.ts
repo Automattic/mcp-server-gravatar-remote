@@ -6,7 +6,6 @@ import { registerProfileTools } from "./tools/profiles.js";
 import { registerAvatarImageTools } from "./tools/avatar-images.js";
 import { registerExperimentalTools } from "./tools/experimental.js";
 
-import type { Env as ConfigEnv } from "./common/env.js";
 import {
   authorize,
   callback,
@@ -16,9 +15,6 @@ import {
 } from "./auth.js";
 import { Hono } from "hono";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-
-// Re-export the Env interface from common/env.ts
-export type Env = ConfigEnv;
 
 // Define the MCP agent with Gravatar tools
 export class GravatarMcpServer extends McpAgent<Env> {
