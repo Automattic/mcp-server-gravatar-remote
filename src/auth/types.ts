@@ -17,7 +17,7 @@ export interface WordPressTokenSet {
   token_type: string;
 }
 
-export interface UserProps {
+export interface UserProps extends Record<string, unknown> {
   claims: WordPressUser;
   tokenSet: WordPressTokenSet;
 }

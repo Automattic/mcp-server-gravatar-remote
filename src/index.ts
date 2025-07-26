@@ -13,11 +13,12 @@ import {
   tokenExchangeCallback,
   registerClient,
 } from "./auth/index.js";
+import type { UserProps } from "./auth/types.js";
 import { Hono } from "hono";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 
 // Define the MCP agent with Gravatar tools
-export class GravatarMcpServer extends McpAgent<Env> {
+export class GravatarMcpServer extends McpAgent<Env, unknown, Props> {
   server = new McpServer(getServerInfo());
 
   async init() {
