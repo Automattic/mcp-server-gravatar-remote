@@ -29,15 +29,15 @@ export function createApiKeyOptions(apiKey?: string) {
 
   return {
     headers,
-    baseURL: "https://api.gravatar.com/v3",
+    baseUrl: "https://api.gravatar.com/v3",
   };
 }
 
-export function createOAuthTokenOptions(oauthToken: string) {
+export function createOAuthTokenOptions(accessToken: string) {
   return {
     headers: {
-      Authorization: `Bearer ${oauthToken}`,
+      Authorization: `Bearer ${accessToken}`,
     },
-    baseURL: "https://api.gravatar.com/v3",
+    baseUrl: "https://api.gravatar.com/v3",
   };
 }
