@@ -105,10 +105,37 @@ export function getApiHeaders(apiKey?: string): Record<string, string> {
  * @param apiKey - Optional API key for authenticated requests
  * @returns RequestConfig object for Kubb API calls
  */
-export function getRequestConfig(apiKey?: string) {
+export function getApiRequestConfig(apiKey?: string) {
   return {
     baseURL: config.restApiBase,
     headers: getApiHeaders(apiKey),
+    timeout: config.requestTimeout,
+  };
+}
+
+/**
+ * Get OAuth headers for authenticated requests
+ * @param accessToken - OAuth access token for authenticated requests
+ * @returns Headers object for OAuth fetch requests
+ */
+export function getOAuthHeaders(accessToken: string): Record<string, string> {
+  return {
+    "User-Agent": generateUserAgent(),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${accessToken}`,
+  };
+}
+
+/**
+ * Get OAuth request configuration for Kubb client functions
+ * @param accessToken - OAuth access token for authenticated requests
+ * @returns RequestConfig object for OAuth API calls
+ */
+export function getOAuthRequestConfig(accessToken: string) {
+  return {
+    baseURL: config.restApiBase,
+    headers: getOAuthHeaders(accessToken),
     timeout: config.requestTimeout,
   };
 }
