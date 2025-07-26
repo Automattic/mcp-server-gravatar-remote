@@ -17,6 +17,8 @@ import type { UserProps } from "./auth/types.js";
 import { Hono } from "hono";
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 
+export type Props = UserProps;
+
 // Define the MCP agent with Gravatar tools
 export class GravatarMcpServer extends McpAgent<Env, unknown, Props> {
   server = new McpServer(getServerInfo());
@@ -90,15 +92,18 @@ function createOAuthProviderIfConfigured(env: Env) {
   }
 
   return new OAuthProvider({
-    // @ts-expect-error - Type issues with the OAuth provider library
-    apiHandler: GravatarMcpServer.mount("/sse"),
-    apiRoute: "/sse",
-    authorizeEndpoint: "/authorize",
-    clientRegistrationEndpoint: "/register",
-    tokenEndpoint: "/token",
-    // @ts-expect-error - Type issues with the OAuth provider library
+    apiHandlers: {
+      // @ts-ignore
+      "/mcp": GravatarMcpServer.serve("/mcp"),
+      // @ts-ignore
+      "/sse": GravatarMcpServer.serveSSE("/sse"),
+    },
+    // @ts-ignore
     defaultHandler: app,
+    authorizeEndpoint: "/authorize",
+    tokenEndpoint: "/token",
     tokenExchangeCallback: (options: any) => tokenExchangeCallback(options),
+    clientRegistrationEndpoint: "/register",
   });
 }
 

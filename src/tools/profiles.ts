@@ -1,6 +1,13 @@
-import { getProfileById, createApiKeyOptions } from "./shared/api-client.js";
+import { z } from "zod";
+import {
+  getProfileById,
+  getProfile,
+  createApiKeyOptions,
+  createOAuthTokenOptions,
+} from "./shared/api-client.js";
 import { generateIdentifier } from "../common/utils.js";
 import { emailInputShape, profileOutputShape, profileInputShape } from "./schemas.js";
+
 import type { GravatarMcpServer } from "../index.js";
 
 export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) {
@@ -79,6 +86,51 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
             {
               type: "text",
               text: `Failed to get profile for ID "${profileIdentifier}": ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // Register get_my_profile tool (OAuth authenticated)
+  agent.server.registerTool(
+    "get_my_profile",
+    {
+      title: "Get My Gravatar Profile (OAuth)",
+      description:
+        "Retrieve the Gravatar profile for the authenticated user. <examples>'Get my Gravatar profile' or 'Show my profile information.'</examples>",
+      inputSchema: z.object({}).shape,
+      outputSchema: profileOutputShape,
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+        idempotentHint: true,
+      },
+    },
+    async () => {
+      try {
+        // Check if user is authenticated
+        if (!agent.props || !agent.props.tokenSet || !agent.props.tokenSet.access_token) {
+          throw new Error("OAuth authentication required. Please authenticate first.");
+        }
+
+        // Get the authenticated user's profile using their OAuth access token
+        const profile = await getProfile(
+          createOAuthTokenOptions(agent.props.tokenSet.access_token),
+        );
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
+          structuredContent: { ...profile },
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to get authenticated user profile: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
           isError: true,
