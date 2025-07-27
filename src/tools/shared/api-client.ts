@@ -29,7 +29,7 @@ export function createApiKeyOptions(apiKey?: string) {
 
   return {
     headers,
-    baseUrl: "https://api.gravatar.com/v3",
+    baseURL: "https://api.gravatar.com/v3",
   };
 }
 
@@ -38,6 +38,6 @@ export function createOAuthTokenOptions(accessToken: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    baseUrl: "https://api.gravatar.com/v3",
+    baseURL: "https://api.gravatar.com/v3",
   };
 }
