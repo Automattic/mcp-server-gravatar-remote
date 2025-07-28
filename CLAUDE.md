@@ -367,19 +367,47 @@ export default {
 };
 ```
 
-## API Key Configuration
+## Development Setup
 
-The server supports optional Gravatar API key configuration:
+### Environment Configuration
 
-### Production
+The server requires environment variables for secrets and configuration:
+
+1. **Copy the example file:**
+   ```bash
+   cp .dev.vars.example .dev.vars
+   ```
+
+2. **Fill in your values:**
+   - Get a Gravatar API key from https://gravatar.com/developers/
+   - Create a WordPress.com OAuth app at https://developer.wordpress.com/apps/
+   - Generate random secrets for JWT signing and cookie encryption
+   - See `.dev.vars.example` for detailed setup instructions
+
+### Configuration Architecture
+
+- **`wrangler.jsonc`** - Contains all explicit configuration for each environment
+- **`.dev.vars`** - Contains only secrets and development-specific overrides
+- **`.dev.vars.example`** - Template file with setup instructions
+
+### Production Deployment
+
+Set secrets for each environment using Wrangler:
+
+**For staging:**
 ```bash
-npx wrangler secret put GRAVATAR_API_KEY
+npx wrangler secret put GRAVATAR_API_KEY --env staging
+npx wrangler secret put OAUTH_CLIENT_ID --env staging
+npx wrangler secret put OAUTH_CLIENT_SECRET --env staging
+npx wrangler secret put OAUTH_SIGNING_SECRET --env staging
+npx wrangler secret put OAUTH_COOKIE_SECRET --env staging
 ```
 
-### Development
-Create `.dev.vars`:
+**For production:**
 ```bash
-GRAVATAR_API_KEY=your-api-key-here
+npx wrangler secret put GRAVATAR_API_KEY --env production
+npx wrangler secret put OAUTH_CLIENT_ID --env production
+npx wrangler secret put OAUTH_CLIENT_SECRET --env production
+npx wrangler secret put OAUTH_SIGNING_SECRET --env production
+npx wrangler secret put OAUTH_COOKIE_SECRET --env production
 ```
-
-The API key enables access to additional profile fields and authenticated endpoints.
