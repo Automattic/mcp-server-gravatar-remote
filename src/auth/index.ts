@@ -264,14 +264,6 @@ export async function callback(c: Context<{ Bindings: Env & { OAUTH_PROVIDER: OA
     new URL(c.req.url),
     wordPressOAuthAuthRequest.transactionState,
   );
-  const response = await oauth.authorizationCodeGrantRequest(
-    authorizationServer,
-    client,
-    clientAuth,
-    params,
-    c.env.OAUTH_REDIRECT_URI!,
-    wordPressOAuthAuthRequest.codeVerifier,
-  );
 
   // Process the response (WordPress OAuth2 doesn't use ID tokens)
   const result = await oauth.processAuthorizationCodeResponse(
@@ -336,8 +328,12 @@ export async function tokenExchangeCallback(
   // During the Authorization Code Exchange, we want to make sure that the Access Token issued
   // by the MCP Server has the same TTL as the one issued by WordPress.
   if (options.grantType === "authorization_code") {
+    // WordPress.com tokens don't expire (expires_in is undefined), but MCP tokens should
+    // Set 1 hour TTL (standard OAuth practice) for MCP client tokens
+    const mcpTokenTTL = options.props.tokenSet.expires_in || 60 * 60; // 1 hour in seconds
+
     return {
-      accessTokenTTL: options.props.tokenSet.expires_in,
+      accessTokenTTL: mcpTokenTTL,
       newProps: {
         ...options.props,
       },
@@ -347,7 +343,17 @@ export async function tokenExchangeCallback(
   if (options.grantType === "refresh_token") {
     const wordPressRefreshToken = options.props.tokenSet.refresh_token;
     if (!wordPressRefreshToken) {
-      throw new Error("No WordPress refresh token found");
+      // WordPress.com tokens don't expire, so we can just issue a new MCP token
+      // with the same WordPress token and a fresh TTL
+      const mcpTokenTTL = 60 * 60; // 1 hour
+
+      return {
+        accessTokenTTL: mcpTokenTTL,
+        newProps: {
+          ...options.props,
+          // Keep the same WordPress token since it doesn't expire
+        },
+      };
     }
 
     const { authorizationServer, client, clientAuth } = getWordPressOAuthConfig({

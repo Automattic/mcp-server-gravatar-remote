@@ -10,3 +10,19 @@ export function requireAuth(props?: UserProps): string {
 export function hasAuth(props?: UserProps): boolean {
   return !!props?.tokenSet?.access_token;
 }
+
+export function getTokenExpirationInfo(props?: UserProps): {
+  hasExpiration: boolean;
+  expiresInSeconds?: number;
+  expiresInMinutes?: number;
+} {
+  if (!props?.tokenSet?.expires_in) {
+    return { hasExpiration: false };
+  }
+
+  return {
+    hasExpiration: true,
+    expiresInSeconds: props.tokenSet.expires_in,
+    expiresInMinutes: Math.round(props.tokenSet.expires_in / 60),
+  };
+}
