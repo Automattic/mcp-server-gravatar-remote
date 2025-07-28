@@ -13,6 +13,7 @@
 export async function getGravatarIntegrationGuide(assetsFetcher: Fetcher): Promise<string> {
   try {
     const response = await assetsFetcher.fetch(
+      // TODO: Replace this with a request from the live gravatar.com site
       new Request("https://assets/gravatar-api-integration-guide.md"),
     );
 
