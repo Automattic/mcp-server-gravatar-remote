@@ -89,7 +89,7 @@
 				"OAUTH_TOKEN_ENDPOINT": "https://public-api.wordpress.com/oauth2/token",
 				"OAUTH_USERINFO_ENDPOINT": "https://public-api.wordpress.com/rest/v1.1/me",
 				"OAUTH_SCOPES": "auth gravatar-profile:read gravatar-profile:manage",
-				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar-staging.your-account.workers.dev/callback"
+				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar-staging.a8cai.workers.dev/callback"
 			}
 		},
 		"production": {
@@ -117,7 +117,7 @@
 				"OAUTH_TOKEN_ENDPOINT": "https://public-api.wordpress.com/oauth2/token",
 				"OAUTH_USERINFO_ENDPOINT": "https://public-api.wordpress.com/rest/v1.1/me",
 				"OAUTH_SCOPES": "auth gravatar-profile:read",
-				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar.your-account.workers.dev/callback"
+				"OAUTH_REDIRECT_URI": "https://mcp-server-gravatar-production.a8cai.workers.dev/callback"
 			}
 		}
 	},
