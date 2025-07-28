@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  fetchAvatar,
-  avatarParams,
-  arrayBufferToBase64,
-  type AvatarParams,
-} from "../../src/tools/avatar-image-api.js";
+import { fetchAvatar, avatarParams, type AvatarParams } from "../../src/tools/avatar-image-api.js";
+import { arrayBufferToBase64 } from "../../src/common/image-utils.js";
 
 // Mock the config module
 vi.mock("../../src/config/server-config.js", () => ({
