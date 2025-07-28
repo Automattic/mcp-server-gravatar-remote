@@ -265,16 +265,33 @@ export async function callback(c: Context<{ Bindings: Env & { OAUTH_PROVIDER: OA
     wordPressOAuthAuthRequest.transactionState,
   );
 
-  // Process the response (WordPress OAuth2 doesn't use ID tokens)
-  const result = await oauth.processAuthorizationCodeResponse(
-    authorizationServer,
-    client,
-    response,
-  );
+  let result: any;
+  try {
+    const response = await oauth.authorizationCodeGrantRequest(
+      authorizationServer,
+      client,
+      clientAuth,
+      params,
+      c.env.OAUTH_REDIRECT_URI!,
+      wordPressOAuthAuthRequest.codeVerifier,
+    );
 
-  // Check for OAuth error (result would be an error object if there was one)
-  if ("error" in result) {
-    return c.text(`OAuth error: ${result.error}`, 400);
+    // Process the response (WordPress OAuth2 doesn't use ID tokens)
+    result = await oauth.processAuthorizationCodeResponse(authorizationServer, client, response);
+
+    // Check for OAuth error (result would be an error object if there was one)
+    if ("error" in result) {
+      console.error("OAuth result error:", result);
+      return c.text(`OAuth error: ${result.error}`, 400);
+    }
+  } catch (error) {
+    console.error("OAuth exchange failed:", {
+      error: error instanceof Error ? error.message : String(error),
+      cause: (error as any)?.cause,
+      redirect_uri: c.env.OAUTH_REDIRECT_URI,
+      request_url: c.req.url,
+    });
+    return c.text("OAuth authentication failed. Please try again.", 500);
   }
 
   // Fetch user info from WordPress API
