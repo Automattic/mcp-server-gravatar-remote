@@ -1,0 +1,84 @@
+# Gravatar MCP Server - Development Secrets and Overrides
+# 
+# Copy this file to `.dev.vars` and fill in your actual values.
+# This file contains ONLY secrets and development-specific overrides.
+# All other configuration is defined in wrangler.jsonc for clarity.
+
+# =============================================================================
+# SECRETS (Not stored in wrangler.jsonc for security)
+# =============================================================================
+
+# Gravatar API Configuration (Optional)
+# Get your API key from: https://gravatar.com/developers/
+GRAVATAR_API_KEY="your-gravatar-api-key-here"
+
+# OAuth Client Secrets
+# Get your app secrets from: https://developer.wordpress.com/apps/
+OAUTH_CLIENT_ID=your-wordpress-app-client-id
+OAUTH_CLIENT_SECRET=your-wordpress-app-client-secret
+
+# OAuth Server Configuration Secrets
+# Generate random 32+ character strings for these:
+# You can use: openssl rand -hex 32
+OAUTH_SIGNING_SECRET=generate-a-random-32-plus-character-string-for-jwt-signing
+OAUTH_COOKIE_SECRET=generate-a-random-32-plus-character-string-for-cookie-encryption
+
+# =============================================================================
+# DEVELOPMENT-ONLY OVERRIDES (Optional)
+# =============================================================================
+
+# Debug Configuration
+# Set to 'true' to enable detailed MCP transport logging
+DEBUG=true
+
+# OAuth 2.1 Authentication Configuration
+# Set to 'true' to enable OAuth authentication for MCP endpoints
+OAUTH_ENABLED=true
+
+# OAuth Server Configuration (Development URLs)
+# These should match your local development setup
+OAUTH_ISSUER_URL=http://localhost:8787/mcp
+OAUTH_BASE_URL=http://localhost:8787/mcp
+
+# =============================================================================
+# OPTIONAL DEVELOPMENT OVERRIDES
+# Uncomment to override wrangler.jsonc defaults for local testing
+# =============================================================================
+
+# DNS Rebinding Protection Configuration
+# ENABLE_DNS_REBINDING_PROTECTION=true
+# ALLOWED_HOSTS=localhost:8787,127.0.0.1:8787
+# ALLOWED_ORIGINS=http://localhost:8787,http://127.0.0.1:8787,http://localhost:6274
+
+# OAuth Service Documentation
+# OAUTH_SERVICE_DOCS_URL=https://docs.yourapp.com/oauth
+
+# =============================================================================
+# SETUP INSTRUCTIONS
+# =============================================================================
+#
+# 1. Copy this file to `.dev.vars`:
+#    cp .dev.vars.example .dev.vars
+#
+# 2. Get a Gravatar API key (optional):
+#    - Visit https://gravatar.com/developers/
+#    - Create an application and copy the API key
+#    - Replace "your-gravatar-api-key-here" above
+#
+# 3. Create a WordPress.com OAuth app:
+#    - Visit https://developer.wordpress.com/apps/
+#    - Create a new application
+#    - Set redirect URI to: http://localhost:8787/callback
+#    - Copy the Client ID and Client Secret
+#    - Replace the OAUTH_CLIENT_ID and OAUTH_CLIENT_SECRET above
+#
+# 4. Generate random secrets:
+#    - Run: openssl rand -hex 32
+#    - Use the output for OAUTH_SIGNING_SECRET and OAUTH_COOKIE_SECRET
+#    - Make sure each secret is unique
+#
+# 5. Test your setup:
+#    - Run: npm run dev
+#    - Visit: http://localhost:8787
+#    - Try the OAuth authentication flow
+#
