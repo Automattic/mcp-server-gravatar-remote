@@ -222,30 +222,52 @@ When using email-based tools, you can provide any valid email format. The system
 2. Generate the appropriate hash for API requests
 3. Process the email securely without storing it
 
-## API Key Configuration (Optional)
+## Configuration
 
-The server works without authentication, but you can optionally configure a Gravatar API key to access additional profile fields.
+### Development Setup
 
-### For Production Deployment
+The server requires environment variables for secrets and OAuth configuration:
 
-Set the API key as a Cloudflare Workers secret:
+1. **Copy the example file:**
+   ```bash
+   cp .dev.vars.example .dev.vars
+   ```
 
+2. **Fill in your values:**
+   - Get a Gravatar API key from https://gravatar.com/developers/ (optional)
+   - Create a WordPress.com OAuth app at https://developer.wordpress.com/apps/
+   - Generate random secrets for JWT signing and cookie encryption
+   - See `.dev.vars.example` for detailed setup instructions
+
+### Configuration Architecture
+
+- **`wrangler.jsonc`** - Contains all explicit configuration for each environment
+- **`.dev.vars`** - Contains only secrets and development-specific overrides  
+- **`.dev.vars.example`** - Template file with setup instructions (safe to commit)
+
+### Production Deployment
+
+Set secrets for each environment using Wrangler:
+
+**For staging:**
 ```bash
-npx wrangler secret put GRAVATAR_API_KEY
+npx wrangler secret put GRAVATAR_API_KEY --env staging
+npx wrangler secret put OAUTH_CLIENT_ID --env staging
+npx wrangler secret put OAUTH_CLIENT_SECRET --env staging
+npx wrangler secret put OAUTH_SIGNING_SECRET --env staging
+npx wrangler secret put OAUTH_COOKIE_SECRET --env staging
 ```
 
-When prompted, enter your Gravatar API key. The key will be securely stored and automatically used by the deployed server.
-
-### For Local Development
-
-Create a `.dev.vars` file in the project root:
-
+**For production:**
 ```bash
-# .dev.vars
-GRAVATAR_API_KEY=your-api-key-here
+npx wrangler secret put GRAVATAR_API_KEY --env production
+npx wrangler secret put OAUTH_CLIENT_ID --env production
+npx wrangler secret put OAUTH_CLIENT_SECRET --env production
+npx wrangler secret put OAUTH_SIGNING_SECRET --env production
+npx wrangler secret put OAUTH_COOKIE_SECRET --env production
 ```
 
-This file is automatically loaded during local development and should not be committed to version control (it's already in `.gitignore`).
+The server works without the Gravatar API key, but configuring it enables access to additional profile fields.
 
 ## Development
 
