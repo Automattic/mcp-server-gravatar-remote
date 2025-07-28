@@ -12,6 +12,10 @@ import {
   getProfileInferredInterestsByIdPathParamsSchema,
 } from "../generated/schemas/index.js";
 import { updateProfileMutationRequestSchema } from "../generated/schemas/profilesSchemas/updateProfileSchema.js";
+import {
+  searchProfilesByVerifiedAccountQueryParamsSchema,
+  searchProfilesByVerifiedAccount200Schema,
+} from "../generated/schemas/experimentalSchemas/searchProfilesByVerifiedAccountSchema.js";
 import { z } from "zod";
 
 // Output schemas for tools
@@ -45,6 +49,17 @@ export const emailInputShape = emailInputSchema.shape;
 // Update profile input schema (for updating user's own profile)
 export const updateProfileInputShape = updateProfileMutationRequestSchema.shape;
 
+// Search profiles by verified account input schema
+export const searchProfilesByVerifiedAccountInputShape =
+  searchProfilesByVerifiedAccountQueryParamsSchema.shape;
+
+// Search profiles by verified account output schema
+export const searchProfilesByVerifiedAccountOutputSchema = (
+  searchProfilesByVerifiedAccount200Schema as z.ZodObject<any>
+).passthrough();
+export const searchProfilesByVerifiedAccountOutputShape =
+  searchProfilesByVerifiedAccountOutputSchema.shape;
+
 // Type exports for TypeScript usage
 export type ProfileOutput = z.infer<typeof profileOutputSchema>;
 export type InterestsOutput = z.infer<typeof interestsOutputSchema>;
@@ -52,3 +67,9 @@ export type ProfileInput = z.infer<typeof getProfileByIdPathParamsSchema>;
 export type InterestsInput = z.infer<typeof getProfileInferredInterestsByIdPathParamsSchema>;
 export type EmailInput = z.infer<typeof emailInputSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileMutationRequestSchema>;
+export type SearchProfilesByVerifiedAccountInput = z.infer<
+  typeof searchProfilesByVerifiedAccountQueryParamsSchema
+>;
+export type SearchProfilesByVerifiedAccountOutput = z.infer<
+  typeof searchProfilesByVerifiedAccount200Schema
+>;

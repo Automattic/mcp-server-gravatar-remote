@@ -1,6 +1,16 @@
-import { getProfileInferredInterestsById, createApiKeyOptions } from "./shared/api-client.js";
+import {
+  getProfileInferredInterestsById,
+  searchProfilesByVerifiedAccount,
+  createApiKeyOptions,
+} from "./shared/api-client.js";
 import { generateIdentifier } from "../common/utils.js";
-import { emailInputShape, interestsOutputShape, profileInputShape } from "./schemas.js";
+import {
+  emailInputShape,
+  interestsOutputShape,
+  profileInputShape,
+  searchProfilesByVerifiedAccountInputShape,
+  searchProfilesByVerifiedAccountOutputShape,
+} from "./schemas.js";
 import type { GravatarMcpServer } from "../index.js";
 
 export function registerExperimentalTools(agent: GravatarMcpServer, apiKey?: string) {
@@ -87,6 +97,50 @@ export function registerExperimentalTools(agent: GravatarMcpServer, apiKey?: str
             {
               type: "text",
               text: `Failed to get interests for ID "${profileIdentifier}": ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // Register search_profiles_by_verified_account tool
+  agent.server.registerTool(
+    "search_profiles_by_verified_account",
+    {
+      title: "Search Profiles by Verified Account",
+      description:
+        "Search for Gravatar profiles that have a verified account with the given username. Optionally filter by service (e.g., 'github', 'twitter'). Results are paginated and require an API key. <examples>'Search for profiles with GitHub username octocat' or 'Find profiles with Twitter username jack, limit to 10 results'</examples>",
+      inputSchema: searchProfilesByVerifiedAccountInputShape,
+      outputSchema: searchProfilesByVerifiedAccountOutputShape,
+      annotations: {
+        readOnlyHint: true,
+        openWorldHint: true,
+        idempotentHint: true,
+      },
+    },
+    async (searchParams) => {
+      try {
+        const searchResults = await searchProfilesByVerifiedAccount(
+          searchParams,
+          createApiKeyOptions(apiKey),
+        );
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(searchResults, null, 2),
+            },
+          ],
+          structuredContent: { ...searchResults },
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to search profiles by verified account: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
           isError: true,
