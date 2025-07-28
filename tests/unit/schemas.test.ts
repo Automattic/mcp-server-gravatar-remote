@@ -3,37 +3,33 @@ import { describe, it, expect } from "vitest";
 describe("MCP Schema Integration Tests", () => {
   describe("Schema Integration", () => {
     it("should import and use generated schemas", async () => {
-      const {
-        mcpProfileOutputSchema,
-        mcpInterestsOutputSchema,
-        mcpProfileInputShape,
-        mcpEmailInputShape,
-      } = await import("../../src/schemas/mcp-schemas.js");
+      const { profileOutputSchema, interestsOutputSchema, profileInputShape, emailInputShape } =
+        await import("../../src/tools/schemas.js");
 
       // Test that schemas are properly structured for MCP tool registration
-      expect(mcpProfileOutputSchema.shape).toBeDefined();
-      expect(mcpInterestsOutputSchema.shape).toBeDefined();
-      expect(mcpProfileInputShape).toBeDefined();
-      expect(mcpEmailInputShape).toBeDefined();
+      expect(profileOutputSchema.shape).toBeDefined();
+      expect(interestsOutputSchema.shape).toBeDefined();
+      expect(profileInputShape).toBeDefined();
+      expect(emailInputShape).toBeDefined();
 
       // Shapes contain the individual field validators
-      expect(mcpEmailInputShape.email).toBeDefined();
-      expect(mcpProfileInputShape.profileIdentifier).toBeDefined();
+      expect(emailInputShape.email).toBeDefined();
+      expect(profileInputShape.profileIdentifier).toBeDefined();
 
       // Test that the field validators work
-      expect(mcpEmailInputShape.email.safeParse("test@example.com").success).toBe(true);
-      expect(mcpProfileInputShape.profileIdentifier.safeParse("test-id").success).toBe(true);
+      expect(emailInputShape.email.safeParse("test@example.com").success).toBe(true);
+      expect(profileInputShape.profileIdentifier.safeParse("test-id").success).toBe(true);
     });
 
     it("should handle schema validation in tool context", async () => {
-      const { mcpEmailInputShape } = await import("../../src/schemas/mcp-schemas.js");
+      const { emailInputShape } = await import("../../src/tools/schemas.js");
 
       // Test email validation that would be used by MCP tools
       const validEmail = "test@example.com";
       const invalidEmail = "not-an-email";
 
-      const validResult = mcpEmailInputShape.email.safeParse(validEmail);
-      const invalidResult = mcpEmailInputShape.email.safeParse(invalidEmail);
+      const validResult = emailInputShape.email.safeParse(validEmail);
+      const invalidResult = emailInputShape.email.safeParse(invalidEmail);
 
       expect(validResult.success).toBe(true);
       expect(invalidResult.success).toBe(false);
@@ -50,7 +46,7 @@ describe("MCP Schema Integration Tests", () => {
 
   describe("Schema Passthrough Behavior", () => {
     it("should allow extra properties in profile output schema", async () => {
-      const { mcpProfileOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { profileOutputSchema } = await import("../../src/tools/schemas.js");
 
       // Mock profile data with required fields
       const baseProfile = {
@@ -75,7 +71,7 @@ describe("MCP Schema Integration Tests", () => {
         experimental_feature: { nested: "data" },
       };
 
-      const result = mcpProfileOutputSchema.safeParse(profileWithExtraFields);
+      const result = profileOutputSchema.safeParse(profileWithExtraFields);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -89,7 +85,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should allow extra properties in interests output schema", async () => {
-      const { mcpInterestsOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { interestsOutputSchema } = await import("../../src/tools/schemas.js");
 
       // Mock interests data with extra fields (like the real 'slug' field)
       const interestsWithExtraFields = {
@@ -111,7 +107,7 @@ describe("MCP Schema Integration Tests", () => {
         ],
       };
 
-      const result = mcpInterestsOutputSchema.safeParse(interestsWithExtraFields);
+      const result = interestsOutputSchema.safeParse(interestsWithExtraFields);
       expect(result.success).toBe(true);
 
       if (result.success) {
@@ -126,7 +122,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should still validate required fields in profile schema", async () => {
-      const { mcpProfileOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { profileOutputSchema } = await import("../../src/tools/schemas.js");
 
       // Test that required fields are still enforced
       const incompleteProfile = {
@@ -136,7 +132,7 @@ describe("MCP Schema Integration Tests", () => {
         extra_field: "should_be_ignored",
       };
 
-      const result = mcpProfileOutputSchema.safeParse(incompleteProfile);
+      const result = profileOutputSchema.safeParse(incompleteProfile);
       expect(result.success).toBe(false);
 
       if (!result.success) {
@@ -146,7 +142,7 @@ describe("MCP Schema Integration Tests", () => {
     });
 
     it("should still validate required fields in interests schema", async () => {
-      const { mcpInterestsOutputSchema } = await import("../../src/schemas/mcp-schemas.js");
+      const { interestsOutputSchema } = await import("../../src/tools/schemas.js");
 
       // Test that required fields are still enforced
       const incompleteInterests = {
@@ -160,7 +156,7 @@ describe("MCP Schema Integration Tests", () => {
         ],
       };
 
-      const result = mcpInterestsOutputSchema.safeParse(incompleteInterests);
+      const result = interestsOutputSchema.safeParse(incompleteInterests);
       expect(result.success).toBe(false);
 
       if (!result.success) {

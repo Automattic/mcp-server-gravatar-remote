@@ -3,7 +3,7 @@ import {
   config,
   getServerInfo,
   getApiHeaders,
-  getRequestConfig,
+  getApiRequestConfig,
   generateUserAgent,
   setClientInfo,
 } from "../../src/config/server-config.js";
@@ -458,7 +458,7 @@ describe("User-Agent integration with API headers", () => {
     };
 
     setClientInfo(clientInfo, capabilities);
-    const requestConfig = getRequestConfig();
+    const requestConfig = getApiRequestConfig();
 
     expect(requestConfig.headers["User-Agent"]).toBe(
       "Gravatar-MCP-Server/99.99.99 VSCode-MCP/1.5.2 (experimental)",
@@ -479,7 +479,7 @@ describe("User-Agent integration with API headers", () => {
 
     const userAgent = generateUserAgent();
     const headers = getApiHeaders();
-    const requestConfig = getRequestConfig();
+    const requestConfig = getApiRequestConfig();
 
     expect(userAgent).toBe("Gravatar-MCP-Server/99.99.99 Test-Client/1.0.0 (sampling; roots)");
     expect(headers["User-Agent"]).toBe(userAgent);
@@ -487,28 +487,28 @@ describe("User-Agent integration with API headers", () => {
   });
 });
 
-describe("getRequestConfig", () => {
+describe("getApiRequestConfig", () => {
   beforeEach(() => {
     // Reset client info before each test
     setClientInfo(undefined, undefined);
   });
 
   it("should return configuration with baseURL", () => {
-    const requestConfig = getRequestConfig();
+    const requestConfig = getApiRequestConfig();
 
     expect(requestConfig).toHaveProperty("baseURL");
     expect(requestConfig.baseURL).toBe("https://api.gravatar.com/v3");
   });
 
   it("should return configuration with timeout", () => {
-    const requestConfig = getRequestConfig();
+    const requestConfig = getApiRequestConfig();
 
     expect(requestConfig).toHaveProperty("timeout");
     expect(requestConfig.timeout).toBe(30000);
   });
 
   it("should return configuration with headers without API key", () => {
-    const requestConfig = getRequestConfig();
+    const requestConfig = getApiRequestConfig();
 
     expect(requestConfig).toHaveProperty("headers");
     expect(requestConfig.headers).toEqual({
@@ -520,7 +520,7 @@ describe("getRequestConfig", () => {
 
   it("should return configuration with headers including API key", () => {
     const apiKey = "test-api-key-123";
-    const requestConfig = getRequestConfig(apiKey);
+    const requestConfig = getApiRequestConfig(apiKey);
 
     expect(requestConfig).toHaveProperty("headers");
     expect(requestConfig.headers).toEqual({
@@ -532,20 +532,20 @@ describe("getRequestConfig", () => {
   });
 
   it("should not include Authorization header when API key is undefined", () => {
-    const requestConfig = getRequestConfig(undefined);
+    const requestConfig = getApiRequestConfig(undefined);
 
     expect(requestConfig.headers).not.toHaveProperty("Authorization");
   });
 
   it("should not include Authorization header when API key is empty string", () => {
-    const requestConfig = getRequestConfig("");
+    const requestConfig = getApiRequestConfig("");
 
     expect(requestConfig.headers).not.toHaveProperty("Authorization");
   });
 
   it("should return complete configuration object", () => {
     const apiKey = "test-api-key-123";
-    const requestConfig = getRequestConfig(apiKey);
+    const requestConfig = getApiRequestConfig(apiKey);
 
     expect(requestConfig).toEqual({
       baseURL: "https://api.gravatar.com/v3",
