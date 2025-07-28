@@ -2,12 +2,18 @@ import { z } from "zod";
 import {
   getProfileById,
   getProfile,
+  updateProfile,
   createApiKeyOptions,
   createOAuthTokenOptions,
 } from "./shared/api-client.js";
+import { requireAuth } from "./shared/auth-utils.js";
 import { generateIdentifier } from "../common/utils.js";
-import { emailInputShape, profileOutputShape, profileInputShape } from "./schemas.js";
-
+import {
+  emailInputShape,
+  profileOutputShape,
+  profileInputShape,
+  updateProfileInputShape,
+} from "./schemas.js";
 import type { GravatarMcpServer } from "../index.js";
 
 export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) {
@@ -131,6 +137,48 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
             {
               type: "text",
               text: `Failed to get authenticated user profile: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // Register update_my_profile tool (OAuth)
+  agent.server.registerTool(
+    "update_my_profile",
+    {
+      title: "Update My Gravatar Profile (OAuth)",
+      description:
+        "Update the Gravatar profile for the authenticated user. Supports partial updates - only provided fields will be updated. To unset a field, set it to an empty string. <examples>'Update my display name to John Smith' or 'Set my job title to Software Engineer and location to San Francisco, CA'</examples>",
+      inputSchema: updateProfileInputShape,
+      outputSchema: profileOutputShape,
+      annotations: {
+        readOnlyHint: false,
+        openWorldHint: true,
+        idempotentHint: false,
+      },
+    },
+    async (updateData) => {
+      try {
+        const accessToken = requireAuth(agent.props);
+        const updatedProfile = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(updatedProfile, null, 2),
+            },
+          ],
+          structuredContent: { ...updatedProfile },
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Failed to update profile: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
           isError: true,

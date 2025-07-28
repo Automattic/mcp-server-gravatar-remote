@@ -11,6 +11,7 @@ import {
   getProfileByIdPathParamsSchema,
   getProfileInferredInterestsByIdPathParamsSchema,
 } from "../generated/schemas/index.js";
+import { updateProfileMutationRequestSchema } from "../generated/schemas/profilesSchemas/updateProfileSchema.js";
 import { z } from "zod";
 
 // Output schemas for tools
@@ -41,9 +42,13 @@ export const emailInputSchema = z.object({
 });
 export const emailInputShape = emailInputSchema.shape;
 
+// Update profile input schema (for updating user's own profile)
+export const updateProfileInputShape = updateProfileMutationRequestSchema.shape;
+
 // Type exports for TypeScript usage
 export type ProfileOutput = z.infer<typeof profileOutputSchema>;
 export type InterestsOutput = z.infer<typeof interestsOutputSchema>;
 export type ProfileInput = z.infer<typeof getProfileByIdPathParamsSchema>;
 export type InterestsInput = z.infer<typeof getProfileInferredInterestsByIdPathParamsSchema>;
 export type EmailInput = z.infer<typeof emailInputSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileMutationRequestSchema>;
