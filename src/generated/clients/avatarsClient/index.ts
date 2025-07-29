@@ -1,0 +1,6 @@
+export { avatarsClient } from './avatarsClient.js'
+export { deleteAvatar } from './deleteAvatar.js'
+export { getAvatars } from './getAvatars.js'
+export { setEmailAvatar } from './setEmailAvatar.js'
+export { updateAvatar } from './updateAvatar.js'
+export { uploadAvatar } from './uploadAvatar.js'
