@@ -4,7 +4,7 @@ import {
   avatarParams,
   arrayBufferToBase64,
   type AvatarParams,
-} from "../../src/tools/avatar-utils.js";
+} from "../../src/tools/avatar-image-api.js";
 
 // Mock the config module
 vi.mock("../../src/config/server-config.js", () => ({
