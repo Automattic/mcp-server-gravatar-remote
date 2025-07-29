@@ -27,13 +27,23 @@ export default defineConfig({
       enumType: "asConst",
       dateType: "date",
       unknownType: "unknown",
+      group: {
+        type: "tag",
+        name({ group }) {
+          return `${group}Models`;
+        },
+      },
     }),
     pluginClient({
       output: {
         path: "./clients",
       },
-      client: {
-        importPath: "../models",
+      client: "axios",
+      group: {
+        type: "tag",
+        name({ group }) {
+          return `${group}Client`;
+        },
       },
     }),
     pluginZod({
@@ -43,6 +53,12 @@ export default defineConfig({
       typed: false,
       dateType: "stringOffset",
       unknownType: "unknown",
+      group: {
+        type: "tag",
+        name({ group }) {
+          return `${group}Schemas`;
+        },
+      },
       // Skip uploadAvatar schema - Kubb generates invalid code: z.boolean().default({})
       // The OpenAPI spec defines a nullable boolean with default null, but Kubb generates
       // an empty object {} as the default for a boolean field, causing TS2769
