@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "CF Documentation": {
+      "type": "sse",
+      "url": "https://docs.mcp.cloudflare.com/sse"
+    },
+    "CF Workers Bindings": {
+      "type": "sse",
+      "url": "https://bindings.mcp.cloudflare.com/sse"
+    },
+    "CF Observability": {
+      "type": "sse",
+      "url": "https://observability.mcp.cloudflare.com/sse"
+    },
+    "CF GraphQL": {
+      "type": "sse",
+      "url": "https://graphql.mcp.cloudflare.com/sse"
+    }
+  }
+}
