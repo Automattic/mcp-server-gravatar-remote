@@ -1,8 +1,19 @@
 /**
- * StreamableHTTP MCP transport
- * - POST /mcp: StreamableHTTP JSON-RPC requests (client-to-server)
- * - GET /mcp: SSE stream for server notifications (server-to-client)
+ * StreamableHTTP MCP transport with HTTP+SSE backward compatibility
+ * 
+ * STREAMABLE HTTP (Modern):
+ * - POST /mcp: StreamableHTTP JSON-RPC requests (bidirectional)
+ * - GET /mcp: Returns 405 Method Not Allowed (no SSE streaming needed)
+ * 
+ * HTTP+SSE (Legacy backward compatibility):
+ * - GET /sse: SSE stream for server notifications (server-to-client)
+ * - POST /sse/messages: Client messages (client-to-server)
+ * 
+ * OTHER ENDPOINTS:
  * - GET /health: Health check endpoint
+ *
+ * This server wraps a simple REST API, so SSE streaming is not needed for
+ * StreamableHTTP transport. Per MCP spec, GET /mcp returns 405 Method Not Allowed.
  *
  * Security Features:
  * - DNS rebinding protection via MCP SDK (configurable via environment variables)
@@ -14,7 +25,7 @@
  * - ALLOWED_ORIGINS: Comma-separated list of allowed Origin header values (production)
  * - NODE_ENV: When not "production", uses localhost defaults for development
  *
- * Based on the CircleCI MCP server implementation:
+ * Loosely based on the CircleCI MCP server implementation:
  * https://github.com/CircleCI-Public/mcp-server-circleci
  * Licensed under Apache License 2.0
  */
@@ -167,24 +178,18 @@ export const createHttpTransport = (server: McpServer) => {
     }
   });
 
-  // GET /mcp → SSE stream for StreamableHTTP server-to-client notifications
+  // GET /mcp → StreamableHTTP does not support SSE streaming (per MCP spec)
   app.get("/mcp", (_req, res) => {
-    (async () => {
-      if (env.DEBUG === "true") {
-        console.log("[DEBUG] StreamableHTTP SSE stream request");
-      }
-      // Create SSE transport for server-to-client notifications
-      const transport = new DebugSSETransport("/mcp", res, env.DEBUG === "true");
-      if (env.DEBUG === "true") {
-        console.log("[DEBUG] Created SSE transport for StreamableHTTP notifications");
-      }
-      await server.connect(transport);
-      // Notify newly connected client of current tool catalogue
-      server.sendToolListChanged();
-      // SSE connection will be closed by client or on disconnect
-    })().catch((err) => {
-      console.error("GET /mcp error:", err);
-      if (!res.headersSent) res.status(500).end();
+    if (env.DEBUG === "true") {
+      console.log("[DEBUG] StreamableHTTP GET request - returning 405 Method Not Allowed (no SSE support)");
+    }
+    // Per MCP spec: "The server MUST either return Content-Type: text/event-stream
+    // in response to this HTTP GET, or else return HTTP 405 Method Not Allowed,
+    // indicating that the server does not offer an SSE stream at this endpoint."
+    // Since this server wraps a fast REST API, SSE streaming is not needed.
+    res.status(405).json({
+      error: "Method Not Allowed",
+      message: "This StreamableHTTP server does not support SSE streaming. Use POST /mcp for requests.",
     });
   });
 
