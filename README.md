@@ -251,23 +251,144 @@ This file is automatically loaded during local development and should not be com
 
 ### Local Development
 
-Start the development server:
+Start the development server in STDIO mode (default):
 
 ```bash
 npm run dev
 ```
 
-This will start the server at `http://localhost:8787` with hot reloading enabled.
+Or start in HTTP mode:
+
+```bash
+npm run dev:http
+```
+
+This will start the HTTP server at `http://localhost:8787` with hot reloading enabled.
+
+### Transport Modes
+
+This server supports two transport modes:
+
+- **STDIO Mode (Default)**: Standard MCP transport using stdin/stdout. Works with all standard MCP clients and is the recommended mode for local development.
+- **HTTP Mode**: StreamableHTTP transport for remote MCP clients. Useful for web-based clients or when you need to access the server over a network.
+
+### HTTP Server Mode
+
+To run the server in HTTP mode for remote MCP clients:
+
+#### Starting the HTTP Server
+
+```bash
+# Development with hot reloading
+npm run dev:http
+
+# Production (built)
+npm run start:http
+```
+
+#### HTTP Endpoints
+
+- **MCP Endpoint**: `http://localhost:8787/mcp` - StreamableHTTP transport for MCP clients
+- **Health Check**: `http://localhost:8787/health` - Simple health check endpoint
+
+#### Environment Configuration
+
+Create a `.env` file to configure the HTTP server:
+
+```bash
+# Transport mode
+MCP_TRANSPORT=http
+
+# Server configuration
+HOST=127.0.0.1         # Use 0.0.0.0 for external access
+PORT=8787               # Default port
+
+# Security (especially important for development)
+ENABLE_DNS_REBINDING_PROTECTION=true
+ALLOWED_HOSTS=localhost:8787,127.0.0.1:8787
+ALLOWED_ORIGINS=http://localhost:8787,http://127.0.0.1:8787
+
+# Debug output
+DEBUG=true
+```
+
+#### Security Note
+
+DNS rebinding protection is especially important for developers since local development environments are more vulnerable to attacks. However, there's currently a bug with MCP Inspector that prevents it from working with rebinding protection enabled, as it doesn't include the required `Origin` header. 
+
+**For MCP Inspector usage**: Temporarily disable rebinding protection by commenting out `ENABLE_DNS_REBINDING_PROTECTION=true` in your `.env` file.
+
+#### Connecting MCP Clients
+
+**Claude Desktop:**
+Claude Desktop requires HTTPS for remote MCP servers, which local development doesn't support. Use the mcp-remote proxy instead:
+
+```json
+{
+  "mcpServers": {
+    "gravatar": {
+      "command": "npx",
+      "args": ["mcp-remote", "http://localhost:8787/mcp"]
+    }
+  }
+}
+```
+
+**Other MCP Clients (Direct StreamableHTTP):**
+- URL: `http://localhost:8787/mcp`
+- Transport: `streamable-http`
 
 ### Available Scripts
 
-- `npm run dev` - Start development server with hot reloading
-- `npm run deploy` - Deploy to Cloudflare Workers
+- `npm run dev` - Start development server in STDIO mode (standard MCP)
+- `npm run dev:http` - Start development server in HTTP mode
+- `npm run start` - Start built server in STDIO mode
+- `npm run start:http` - Start built server in HTTP mode
+- `npm run build` - Build TypeScript to JavaScript
 - `npm run type-check` - Run TypeScript type checking
 - `npm run lint` - Run code linting
 - `npm run lint:fix` - Run linting with auto-fix
 - `npm run format` - Format code with Biome
-- `npm run extract-schemas` - Generate MCP schemas from OpenAPI spec
+
+### MCP Inspector (Testing)
+
+- `npm run inspector` - Launch MCP Inspector with STDIO transport
+- `npm run inspector:http` - Launch MCP Inspector with HTTP transport
+
+#### Inspector Usage: STDIO
+```bash
+# Terminal 1: Start STDIO server
+npm run dev
+
+# Terminal 2: Launch inspector
+npm run inspector
+```
+
+#### Inspector Usage: StreamableHTTP
+```bash
+# Terminal 1: Start HTTP server
+npm run dev:http
+
+# Terminal 2: Launch inspector
+npm run inspector:http
+```
+
+**Manual Configuration (First Time Setup):**
+
+The inspector web interface remembers your settings. Configure once:
+
+**STDIO Mode (`npm run inspector`):**
+1. In the web interface, set:
+   - Transport: `stdio` (default)
+   - Command: `tsx`
+   - Arguments: `--env-file=.env src/index.ts`
+2. Click "Connect" - settings will be saved for future use
+
+**HTTP Mode (`npm run inspector:http`):**
+1. In the web interface, set:
+   - Transport: `streamable-http`
+   - URL: `http://localhost:8787/mcp`
+2. Click "Connect" - settings will be saved for future use
 
 ### Building from Source
 

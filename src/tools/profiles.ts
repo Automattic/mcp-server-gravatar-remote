@@ -1,11 +1,11 @@
 import { getProfileById, createApiKeyOptions } from "./shared/api-client.js";
 import { generateIdentifier } from "../common/utils.js";
 import { emailInputShape, profileOutputShape, profileInputShape } from "./schemas.js";
-import type { GravatarMcpServer } from "../index.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) {
+export function registerProfileTools(server: McpServer, apiKey?: string) {
   // Register get_profile_by_email tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_profile_by_email",
     {
       title: "Get Gravatar Profile by Email",
@@ -47,7 +47,7 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
   );
 
   // Register get_profile_by_id tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_profile_by_id",
     {
       title: "Get Gravatar Profile by ID",

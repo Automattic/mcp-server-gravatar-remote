@@ -1,11 +1,11 @@
 import { getProfileInferredInterestsById, createApiKeyOptions } from "./shared/api-client.js";
 import { generateIdentifier } from "../common/utils.js";
 import { emailInputShape, interestsOutputShape, profileInputShape } from "./schemas.js";
-import type { GravatarMcpServer } from "../index.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-export function registerExperimentalTools(agent: GravatarMcpServer, apiKey?: string) {
+export function registerExperimentalTools(server: McpServer, apiKey?: string) {
   // Register get_inferred_interests_by_email tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_inferred_interests_by_email",
     {
       title: "Get Inferred Interests by Email",
@@ -51,7 +51,7 @@ export function registerExperimentalTools(agent: GravatarMcpServer, apiKey?: str
   );
 
   // Register get_inferred_interests_by_id tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_inferred_interests_by_id",
     {
       title: "Get Inferred Interests by ID",
