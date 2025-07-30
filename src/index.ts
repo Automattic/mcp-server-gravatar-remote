@@ -10,10 +10,9 @@ import { createStdioTransport } from "./transports/stdio.js";
 import { createHttpTransport } from "./transports/http-unified.js";
 import { getEnv, type Env } from "./common/env.js";
 
-const server = createServer();
-
 async function main() {
   const env = getEnv<Env>();
+  const server = createServer();
 
   if (env.MCP_TRANSPORT === "http") {
     console.log("Starting Gravatar MCP server in HTTP mode...");

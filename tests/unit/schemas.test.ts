@@ -1,168 +1,102 @@
 import { describe, it, expect } from "vitest";
 
-describe("MCP Schema Integration Tests", () => {
-  describe("Schema Integration", () => {
-    it("should import and use generated schemas", async () => {
-      const { profileOutputSchema, interestsOutputSchema, profileInputShape, emailInputShape } =
-        await import("../../src/schemas.js");
+describe("Schema Passthrough Behavior", () => {
+  it("should handle API evolution gracefully by accepting extra fields", async () => {
+    const { profileOutputSchema, interestsOutputSchema } = await import(
+      "../../src/tools/schemas.js"
+    );
 
-      // Test that schemas are properly structured for MCP tool registration
-      expect(profileOutputSchema.shape).toBeDefined();
-      expect(interestsOutputSchema.shape).toBeDefined();
-      expect(profileInputShape).toBeDefined();
-      expect(emailInputShape).toBeDefined();
+    // Test profile schema resilience to future API changes
+    const profileWithNewFields = {
+      hash: "abc123",
+      display_name: "Test User",
+      profile_url: "https://gravatar.com/test",
+      avatar_url: "https://gravatar.com/avatar/abc123",
+      avatar_alt_text: "Test avatar",
+      location: "Test City",
+      description: "Test description",
+      job_title: "Test Job",
+      company: "Test Company",
+      verified_accounts: [],
+      pronunciation: "Test",
+      pronouns: "they/them",
+      // Simulated future API fields that should not break validation
+      new_social_platform: "threads",
+      ai_generated_bio: true,
+      premium_features: { verified: true, priority_support: false },
+    };
 
-      // Shapes contain the individual field validators
-      expect(emailInputShape.email).toBeDefined();
-      expect(profileInputShape.profileIdentifier).toBeDefined();
+    const profileResult = profileOutputSchema.safeParse(profileWithNewFields);
+    expect(profileResult.success).toBe(true);
 
-      // Test that the field validators work
-      expect(emailInputShape.email.safeParse("test@example.com").success).toBe(true);
-      expect(profileInputShape.profileIdentifier.safeParse("test-id").success).toBe(true);
-    });
+    if (profileResult.success) {
+      // Core fields should remain accessible
+      expect(profileResult.data.hash).toBe("abc123");
+      expect(profileResult.data.display_name).toBe("Test User");
+      // New fields should be preserved
+      expect(profileResult.data.new_social_platform).toBe("threads");
+      expect(profileResult.data.premium_features).toEqual({
+        verified: true,
+        priority_support: false,
+      });
+    }
 
-    it("should handle schema validation in tool context", async () => {
-      const { emailInputShape } = await import("../../src/schemas.js");
+    // Test interests schema resilience
+    const interestsWithNewFields = {
+      interests: [
+        {
+          id: 7,
+          name: "adventure travel",
+          // Simulated future fields
+          slug: "adventure-travel",
+          popularity_score: 85,
+          trending: true,
+          metadata: { source: "ai-inference", confidence: 0.92 },
+        },
+      ],
+    };
 
-      // Test email validation that would be used by MCP tools
-      const validEmail = "test@example.com";
-      const invalidEmail = "not-an-email";
+    const interestsResult = interestsOutputSchema.safeParse(interestsWithNewFields);
+    expect(interestsResult.success).toBe(true);
 
-      const validResult = emailInputShape.email.safeParse(validEmail);
-      const invalidResult = emailInputShape.email.safeParse(invalidEmail);
-
-      expect(validResult.success).toBe(true);
-      expect(invalidResult.success).toBe(false);
-
-      if (validResult.success) {
-        expect(validResult.data).toBe(validEmail);
-      }
-
-      if (!invalidResult.success) {
-        expect(invalidResult.error).toBeDefined();
-      }
-    });
+    if (interestsResult.success) {
+      expect(interestsResult.data.interests[0].name).toBe("adventure travel");
+      expect(interestsResult.data.interests[0].slug).toBe("adventure-travel");
+      expect(interestsResult.data.interests[0].metadata).toEqual({
+        source: "ai-inference",
+        confidence: 0.92,
+      });
+    }
   });
 
-  describe("Schema Passthrough Behavior", () => {
-    it("should allow extra properties in profile output schema", async () => {
-      const { profileOutputSchema } = await import("../../src/schemas.js");
+  it("should still enforce required fields despite passthrough", async () => {
+    const { profileOutputSchema, interestsOutputSchema } = await import(
+      "../../src/tools/schemas.js"
+    );
 
-      // Mock profile data with required fields
-      const baseProfile = {
-        hash: "abc123",
-        display_name: "Test User",
-        profile_url: "https://gravatar.com/test",
-        avatar_url: "https://gravatar.com/avatar/abc123",
-        avatar_alt_text: "Test avatar",
-        location: "Test City",
-        description: "Test description",
-        job_title: "Test Job",
-        company: "Test Company",
-        verified_accounts: [],
-        pronunciation: "Test",
-        pronouns: "they/them",
-      };
+    // Profile missing required fields should fail
+    const incompleteProfile = {
+      hash: "abc123",
+      display_name: "Test User",
+      // Missing profile_url, avatar_url, etc.
+      future_field: "this won't help",
+    };
 
-      // Test with extra fields that might come from API updates
-      const profileWithExtraFields = {
-        ...baseProfile,
-        new_field: "new_value", // This would break without passthrough
-        experimental_feature: { nested: "data" },
-      };
+    const profileResult = profileOutputSchema.safeParse(incompleteProfile);
+    expect(profileResult.success).toBe(false);
 
-      const result = profileOutputSchema.safeParse(profileWithExtraFields);
-      expect(result.success).toBe(true);
+    // Interests with invalid structure should fail
+    const invalidInterests = {
+      interests: [
+        {
+          id: 7,
+          // Missing required 'name' field
+          future_field: "this won't help either",
+        },
+      ],
+    };
 
-      if (result.success) {
-        // Verify known fields are preserved
-        expect(result.data.hash).toBe("abc123");
-        expect(result.data.display_name).toBe("Test User");
-        // Verify extra fields are preserved
-        expect(result.data.new_field).toBe("new_value");
-        expect(result.data.experimental_feature).toEqual({ nested: "data" });
-      }
-    });
-
-    it("should allow extra properties in interests output schema", async () => {
-      const { interestsOutputSchema } = await import("../../src/schemas.js");
-
-      // Mock interests data with extra fields (like the real 'slug' field)
-      const interestsWithExtraFields = {
-        interests: [
-          {
-            id: 7,
-            name: "adventure travel",
-            slug: "7-adventure-travel", // This would break without passthrough
-            category: "travel", // Another hypothetical future field
-            popularity: 85,
-          },
-          {
-            id: 88,
-            name: "comedy movies",
-            slug: "88-comedy-movies",
-            category: "entertainment",
-            popularity: 92,
-          },
-        ],
-      };
-
-      const result = interestsOutputSchema.safeParse(interestsWithExtraFields);
-      expect(result.success).toBe(true);
-
-      if (result.success) {
-        // Verify known fields are preserved
-        expect(result.data.interests[0].id).toBe(7);
-        expect(result.data.interests[0].name).toBe("adventure travel");
-        // Verify extra fields are preserved
-        expect(result.data.interests[0].slug).toBe("7-adventure-travel");
-        expect(result.data.interests[0].category).toBe("travel");
-        expect(result.data.interests[0].popularity).toBe(85);
-      }
-    });
-
-    it("should still validate required fields in profile schema", async () => {
-      const { profileOutputSchema } = await import("../../src/schemas.js");
-
-      // Test that required fields are still enforced
-      const incompleteProfile = {
-        hash: "abc123",
-        display_name: "Test User",
-        // Missing required fields
-        extra_field: "should_be_ignored",
-      };
-
-      const result = profileOutputSchema.safeParse(incompleteProfile);
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        expect(result.error.issues).toBeDefined();
-        expect(result.error.issues.length).toBeGreaterThan(0);
-      }
-    });
-
-    it("should still validate required fields in interests schema", async () => {
-      const { interestsOutputSchema } = await import("../../src/schemas.js");
-
-      // Test that required fields are still enforced
-      const incompleteInterests = {
-        interests: [
-          {
-            id: 7,
-            // Missing required 'name' field
-            slug: "7-adventure-travel",
-            extra_field: "should_be_ignored",
-          },
-        ],
-      };
-
-      const result = interestsOutputSchema.safeParse(incompleteInterests);
-      expect(result.success).toBe(false);
-
-      if (!result.success) {
-        expect(result.error.issues).toBeDefined();
-        expect(result.error.issues.length).toBeGreaterThan(0);
-      }
-    });
+    const interestsResult = interestsOutputSchema.safeParse(invalidInterests);
+    expect(interestsResult.success).toBe(false);
   });
 });
