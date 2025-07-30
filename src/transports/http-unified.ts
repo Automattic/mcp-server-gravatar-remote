@@ -62,8 +62,109 @@ export const createHttpTransport = (server: McpServer) => {
       status: "ok",
       server: serverInfo.name,
       version: serverInfo.version,
-      transports: ["streamable-http"],
+      transports: ["streamable-http", "http-sse"],
     });
+  });
+
+  // Store SSE transports by session ID for backward compatibility
+  const sseTransports = new Map<string, SSEServerTransport>();
+
+  // GET /sse → SSE connection for backward compatibility with older MCP clients
+  app.get("/sse", (_req, res) => {
+    (async () => {
+      if (env.DEBUG === "true") {
+        console.log("[DEBUG] HTTP+SSE backward compatibility connection");
+      }
+
+      // Create SSE transport for backward compatibility - SDK handles endpoint event automatically
+      const transport = new DebugSSETransport("/sse/messages", res, env.DEBUG === "true");
+
+      if (env.DEBUG === "true") {
+        console.log(`[DEBUG] Created SSE transport for HTTP+SSE, session: ${transport.sessionId}`);
+      }
+
+      // Connect to server first - this calls transport.start() which sends the endpoint event
+      await server.connect(transport);
+
+      // Store transport by session ID for POST routing (after connection is established)
+      transport.onclose = () => {
+        if (env.DEBUG === "true") {
+          console.log(`[DEBUG] HTTP+SSE client disconnected, session: ${transport.sessionId}`);
+        }
+        sseTransports.delete(transport.sessionId);
+      };
+
+      sseTransports.set(transport.sessionId, transport);
+
+      if (env.DEBUG === "true") {
+        console.log(
+          `[DEBUG] HTTP+SSE transport connected and stored, session: ${transport.sessionId}`,
+        );
+      }
+
+      // Notify newly connected client of current tool catalogue
+      server.sendToolListChanged();
+    })().catch((err) => {
+      console.error("GET /sse error:", err);
+      if (!res.headersSent) res.status(500).end();
+    });
+  });
+
+  // POST /sse/messages → HTTP endpoint for client messages in backward compatibility mode
+  app.post("/sse/messages", async (req, res) => {
+    try {
+      if (env.DEBUG === "true") {
+        console.log("[DEBUG] POST /sse/messages - Query params:", req.query);
+        console.log(
+          "[DEBUG] POST /sse/messages - Available sessions:",
+          Array.from(sseTransports.keys()),
+        );
+      }
+
+      const sessionId = req.query.sessionId as string;
+      if (!sessionId) {
+        console.error("Missing session ID in POST /sse/messages");
+        console.log("Query params:", req.query);
+        console.log("Available sessions:", Array.from(sseTransports.keys()));
+        return res.status(400).json({
+          jsonrpc: "2.0",
+          error: { code: -32600, message: "Missing session ID" },
+          id: null,
+        });
+      }
+
+      const transport = sseTransports.get(sessionId);
+      if (!transport) {
+        return res.status(404).json({
+          jsonrpc: "2.0",
+          error: { code: -32600, message: "Session not found" },
+          id: null,
+        });
+      }
+
+      if (env.DEBUG === "true") {
+        console.log(
+          `[DEBUG] POST /sse/messages - Session: ${sessionId}, Method: ${req.body?.method}`,
+        );
+      }
+
+      await transport.handleMessage(req.body);
+
+      res.status(200).json({ status: "ok" });
+    } catch (error) {
+      console.error("Error in POST /sse/messages:", error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          jsonrpc: "2.0",
+          error: {
+            code: -32603,
+            message: "Internal server error",
+            data: error instanceof Error ? error.message : String(error),
+          },
+          id: req.body?.id || null,
+        });
+      }
+    }
   });
 
   // GET /mcp → SSE stream for StreamableHTTP server-to-client notifications
@@ -151,8 +252,11 @@ export const createHttpTransport = (server: McpServer) => {
       `📡 MCP endpoint: http://${host === "0.0.0.0" ? "your-domain.com" : "localhost"}:${port}/mcp`,
     );
     console.log(
+      `🔄 SSE endpoint: http://${host === "0.0.0.0" ? "your-domain.com" : "localhost"}:${port}/sse (backward compatibility)`,
+    );
+    console.log(
       `🩺 Health check: http://${host === "0.0.0.0" ? "your-domain.com" : "localhost"}:${port}/health`,
     );
-    console.log("✨ Supports: StreamableHTTP (modern MCP transport)");
+    console.log("✨ Supports: StreamableHTTP (modern), HTTP+SSE (legacy)");
   });
 };
