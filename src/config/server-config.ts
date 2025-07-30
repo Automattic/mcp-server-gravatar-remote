@@ -87,10 +87,6 @@ export function generateUserAgent(): string {
   const capabilitiesString = capabilities.length > 0 ? capabilities.join("; ") : "none";
   userAgent += ` (${capabilitiesString})`;
 
-  if (env.DEBUG === "true") {
-    console.log("[DEBUG] Generated User-Agent:", userAgent);
-  }
-
   return userAgent;
 }
 
@@ -108,13 +104,6 @@ export function getApiHeaders(apiKey?: string): Record<string, string> {
 
   if (apiKey && apiKey.trim() !== "") {
     headers.Authorization = `Bearer ${apiKey}`;
-  }
-
-  if (env.DEBUG === "true") {
-    console.log("[DEBUG] API Headers:", {
-      "User-Agent": headers["User-Agent"],
-      Authorization: apiKey ? "Bearer ***" : "(none)",
-    });
   }
 
   return headers;
