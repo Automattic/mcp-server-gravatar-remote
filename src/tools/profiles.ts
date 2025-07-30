@@ -100,7 +100,7 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
     },
   );
 
-  // Register get_my_profile tool (OAuth authenticated)
+  // Register get_my_profile tool
   agent.server.registerTool(
     "get_my_profile",
     {
@@ -117,18 +117,15 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
     },
     async () => {
       try {
-        // Check if user is authenticated
-        if (!agent.props || !agent.props.tokenSet || !agent.props.tokenSet.access_token) {
-          throw new Error("OAuth authentication required. Please authenticate first.");
-        }
-
-        // Get the authenticated user's profile using their OAuth access token
-        const profile = await getProfile(
-          createOAuthTokenOptions(agent.props.tokenSet.access_token),
-        );
-
+        const accessToken = requireAuth(agent.props);
+        const profile = await getProfile(createOAuthTokenOptions(accessToken));
         return {
-          content: [{ type: "text", text: JSON.stringify(profile, null, 2) }],
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(profile, null, 2),
+            },
+          ],
           structuredContent: { ...profile },
         };
       } catch (error) {
@@ -145,7 +142,7 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
     },
   );
 
-  // Register update_my_profile tool (OAuth)
+  // Register update_my_profile tool
   agent.server.registerTool(
     "update_my_profile",
     {
@@ -163,7 +160,10 @@ export function registerProfileTools(agent: GravatarMcpServer, apiKey?: string) 
     async (updateData) => {
       try {
         const accessToken = requireAuth(agent.props);
-        const updatedProfile = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
+        const updatedProfile = await updateProfile(
+          updateData,
+          createOAuthTokenOptions(accessToken),
+        );
         return {
           content: [
             {

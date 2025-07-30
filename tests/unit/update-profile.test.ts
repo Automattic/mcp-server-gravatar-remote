@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { updateProfile, createOAuthOptions } from "../../src/tools/shared/api-client.js";
+import { updateProfile, createOAuthTokenOptions } from "../../src/tools/shared/api-client.js";
 import { requireAuth } from "../../src/tools/shared/auth-utils.js";
 import type { UpdateProfileInput } from "../../src/tools/schemas.js";
 import type { UserProps } from "../../src/auth/types.js";
@@ -65,7 +65,7 @@ describe("Update Profile Tool", () => {
 
     // Simulate the tool function logic
     const accessToken = requireAuth(mockProps);
-    const result = await updateProfile(updateData, createOAuthOptions(accessToken));
+    const result = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
 
     expect(requireAuth).toHaveBeenCalledWith(mockProps);
     expect(updateProfile).toHaveBeenCalledWith(updateData, {
@@ -87,7 +87,7 @@ describe("Update Profile Tool", () => {
     });
 
     const accessToken = requireAuth(mockProps);
-    const result = await updateProfile(updateData, createOAuthOptions(accessToken));
+    const result = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
 
     expect(result.job_title).toBe("CTO");
   });
@@ -110,7 +110,7 @@ describe("Update Profile Tool", () => {
 
     const accessToken = requireAuth(mockProps);
 
-    await expect(updateProfile(updateData, createOAuthOptions(accessToken))).rejects.toThrow(
+    await expect(updateProfile(updateData, createOAuthTokenOptions(accessToken))).rejects.toThrow(
       "API Error: Invalid request",
     );
   });
@@ -138,7 +138,7 @@ describe("Update Profile Tool", () => {
     });
 
     const accessToken = requireAuth(mockProps);
-    const result = await updateProfile(updateData, createOAuthOptions(accessToken));
+    const result = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
 
     expect(updateProfile).toHaveBeenCalledWith(updateData, expect.any(Object));
     expect(result).toMatchObject(updateData);
@@ -160,7 +160,7 @@ describe("Update Profile Tool", () => {
     });
 
     const accessToken = requireAuth(mockProps);
-    const result = await updateProfile(updateData, createOAuthOptions(accessToken));
+    const result = await updateProfile(updateData, createOAuthTokenOptions(accessToken));
 
     expect(result.job_title).toBe("");
     expect(result.company).toBe("");
