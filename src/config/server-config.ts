@@ -49,13 +49,6 @@ export function setClientInfo(
 }
 
 /**
- * Check if client info has been captured yet
- */
-export function hasClientInfo(): boolean {
-  return _clientInfo !== undefined;
-}
-
-/**
  * Generate a User-Agent header that encodes MCP client information
  * Format: Server-name/version MCP-client-name/version (capability_1; capability_2)
  */
