@@ -77,6 +77,11 @@ export const createHttpTransport = (server: McpServer) => {
     });
   });
 
+  // WP VIP required health check endpoint
+  app.get("/cache-healthcheck", (_req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // Store SSE transports by session ID for backward compatibility
   const sseTransports = new Map<string, SSEServerTransport>();
 
