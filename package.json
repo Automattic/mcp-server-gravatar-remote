@@ -8,12 +8,12 @@
     "gravatar-mcp-server": "dist/index.js"
   },
   "scripts": {
-    "dev": "nodemon --watch . --ext ts,json --env-file=.env --exec tsx src/index.ts",
-    "dev:http": "MCP_TRANSPORT=http nodemon --watch . --ext ts,json --env-file=.env --exec tsx src/index.ts",
-    "start": "node --env-file=.env dist/index.js",
-    "start:http": "MCP_TRANSPORT=http node --env-file=.env dist/index.js",
+    "dev": "nodemon --watch . --ext ts,json --env-file-if-exists=.env --exec tsx src/index.ts",
+    "dev:http": "MCP_TRANSPORT=http nodemon --watch . --ext ts,json --env-file-if-exists=.env --exec tsx src/index.ts",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node --env-file-if-exists=.env dist/index.js",
     "build": "tsc && chmod +x dist/index.js",
-    "inspector": "npx @modelcontextprotocol/inspector tsx --env-file=.env src/index.ts",
+    "inspector": "npx @modelcontextprotocol/inspector tsx --env-file-if-exists=.env src/index.ts",
     "inspector:http": "npx @modelcontextprotocol/inspector --transport streamable-http --serverUrl http://localhost:8787/mcp",
     "format": "biome format --write",
     "lint": "biome lint",
