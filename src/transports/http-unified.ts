@@ -1,14 +1,14 @@
 /**
  * StreamableHTTP MCP transport with HTTP+SSE backward compatibility
- * 
+ *
  * STREAMABLE HTTP (Modern):
  * - POST /mcp: StreamableHTTP JSON-RPC requests (bidirectional)
  * - GET /mcp: Returns 405 Method Not Allowed (no SSE streaming needed)
- * 
+ *
  * HTTP+SSE (Legacy backward compatibility):
  * - GET /sse: SSE stream for server notifications (server-to-client)
  * - POST /sse/messages: Client messages (client-to-server)
- * 
+ *
  * OTHER ENDPOINTS:
  * - GET /health: Health check endpoint
  *
@@ -248,7 +248,7 @@ export const createHttpTransport = (server: McpServer) => {
   });
 
   const port = Number.parseInt(env.PORT || "8787", 10);
-  const host = env.HOST || (env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
+  const host = env.HOST || "0.0.0.0";
 
   app.listen(port, host, () => {
     if (env.DEBUG === "true") {
