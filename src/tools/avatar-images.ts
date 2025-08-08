@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { fetchAvatar, avatarParams } from "./avatar-image-api.js";
 import { generateIdentifier } from "../common/utils.js";
-import type { GravatarMcpServer } from "../index.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 
-export function registerAvatarImageTools(agent: GravatarMcpServer) {
+export function registerAvatarImageTools(server: McpServer) {
   // Register get_avatar_by_email tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_avatar_by_email",
     {
       title: "Get Avatar Image by Email",
@@ -82,7 +82,7 @@ export function registerAvatarImageTools(agent: GravatarMcpServer) {
   );
 
   // Register get_avatar_by_id tool
-  agent.server.registerTool(
+  server.registerTool(
     "get_avatar_by_id",
     {
       title: "Get Avatar Image by ID",

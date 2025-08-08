@@ -8,7 +8,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["src/generated/**", "tests/**", "**/*.d.ts", "vitest.config.ts"],
+      include: ["src/**/*.ts"],
+      exclude: [
+        "src/generated/**",
+        "tests/**",
+        "**/*.d.ts",
+        "vitest.config.ts",
+        "kubb.config.ts",
+        "dist/**",
+      ],
     },
   },
   esbuild: {

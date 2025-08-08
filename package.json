@@ -1,46 +1,57 @@
 {
-	"name": "gravatar-mcp-server-remote",
-	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"deploy": "wrangler deploy --env production",
-		"deploy:staging": "wrangler deploy --env staging",
-		"dev": "wrangler dev",
-		"dev:staging": "wrangler dev --env staging",
-		"format": "biome format --write",
-		"lint": "biome lint",
-		"lint:fix": "biome lint --fix",
-		"start": "wrangler dev",
-		"cf-typegen": "wrangler types",
-		"type-check": "tsc --noEmit",
-		"test": "vitest",
-		"test:ui": "vitest --ui",
-		"test:run": "vitest run",
-		"test:coverage": "vitest run --coverage",
-		"generate-kubb": "npx kubb generate",
-		"generate-kubb-with-spec": "make download-spec && npx kubb generate"
-	},
-	"dependencies": {
-		"@modelcontextprotocol/sdk": "1.15.1",
-		"agents": "^0.0.100",
-		"zod": "^3.25.67"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.0.6",
-		"@cloudflare/workers-types": "^4.20250709.0",
-		"@kubb/core": "^3.15.0",
-		"@kubb/plugin-client": "^3.15.0",
-		"@kubb/plugin-oas": "^3.15.0",
-		"@kubb/plugin-ts": "^3.15.0",
-		"@kubb/plugin-zod": "^3.15.0",
-		"@types/node": "^24.0.10",
-		"@vitest/coverage-v8": "^3.2.4",
-		"@vitest/ui": "^3.2.4",
-		"msw": "^2.10.3",
-		"tsx": "^4.0.0",
-		"typescript": "^5.8.3",
-		"universal-user-agent": "^7.0.0",
-		"vitest": "^3.2.4",
-		"wrangler": "^4.24.3"
-	}
+  "name": "gravatar-mcp-server-remote",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "gravatar-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "nodemon --watch . --ext ts,json --env-file-if-exists=.env --exec tsx src/index.ts",
+    "dev:http": "MCP_TRANSPORT=http nodemon --watch . --ext ts,json --env-file-if-exists=.env --exec tsx src/index.ts",
+    "start": "node --env-file-if-exists=.env dist/index.js",
+    "start:http": "MCP_TRANSPORT=http node --env-file-if-exists=.env dist/index.js",
+    "build": "tsc && chmod +x dist/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector tsx --env-file-if-exists=.env src/index.ts",
+    "inspector:http": "npx @modelcontextprotocol/inspector --transport streamable-http --serverUrl http://localhost:8787/mcp",
+    "format": "biome format --write",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --fix",
+    "type-check": "tsc --noEmit",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "generate-kubb": "npx kubb generate",
+    "generate-kubb-with-spec": "make download-spec && npx kubb generate"
+  },
+  "dependencies": {
+    "@kubb/core": "^3.15.0",
+    "@kubb/plugin-client": "^3.15.0",
+    "@kubb/plugin-oas": "^3.15.0",
+    "@kubb/plugin-ts": "^3.15.0",
+    "@kubb/plugin-zod": "^3.15.0",
+    "@modelcontextprotocol/sdk": "1.15.1",
+    "@types/express": "^4.17.21",
+    "@types/node": "^24.0.10",
+    "axios": "^1.11.0",
+    "express": "^4.19.2",
+    "typescript": "^5.9.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.6",
+    "@modelcontextprotocol/inspector": "^0.16.1",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "msw": "^2.10.3",
+    "nodemon": "^3.0.2",
+    "tsx": "^4.0.0",
+    "universal-user-agent": "^7.0.0",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

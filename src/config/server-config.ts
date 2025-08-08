@@ -1,6 +1,6 @@
 /**
  * Centralized configuration for Gravatar MCP server
- * Adapted for Cloudflare Workers environment
+ * Adapted for Node.js environment
  */
 
 import { getEnv, type Env } from "../common/env.js";
@@ -31,7 +31,7 @@ export const config = {
  */
 export function getServerInfo() {
   return {
-    name: `${env.MCP_SERVER_NAME}`,
+    name: env.MCP_SERVER_NAME || "gravatar-mcp-server",
     version: VERSION,
   };
 }
