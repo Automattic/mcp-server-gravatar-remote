@@ -191,5 +191,5 @@ This server uses a stateless design with Express.js and StreamableHTTP transport
 - Developed an OpenAPI-first approach using Gravatar's specification to generate TypeScript clients and MCP schemas
 - Created a modular MCP architecture with shared utility functions grouped by API endpoint type
 - Always try the clean approach first before resorting to type casting
-- Refactored the initial Cloudflare Worker implementation to a more robust Node.js server architecture, improving modularity, type safety, and performance by leveraging TypeScript, Zod schemas, and a more flexible MCP tool design
+- Implemented a robust Node.js server architecture with Express.js, improving modularity, type safety, and performance by leveraging TypeScript, Zod schemas, and a flexible MCP tool design
 - When dependencies in the package.json are modified (added, removed, or changed), you MUST run `npm install` so that the package-lock.json is also updated

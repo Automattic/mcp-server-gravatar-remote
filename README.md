@@ -1,25 +1,8 @@
-[![NPM Type Definitions](https://img.shields.io/badge/types-TypeScript-blue?style=plastic&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-orange?style=plastic&logo=node.js&logoColor=white)](https://nodejs.org/) [![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?style=plastic&logo=cloudflare&logoColor=white)](https://workers.cloudflare.com/)
+[![NPM Type Definitions](https://img.shields.io/badge/types-TypeScript-blue?style=plastic&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-orange?style=plastic&logo=node.js&logoColor=white)](https://nodejs.org/)
 
 # Remote Gravatar MCP Server
 
-Gravatar's official remote MCP Server for Cloudflare Workers, enabling global access to avatars, profiles, and inferred interests through the Model Context Protocol.
-
-## Quick Deploy
-
-Deploy your own instance to Cloudflare Workers:
-
-[![Deploy to Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Automattic/mcp-server-gravatar-remote)
-
-This will deploy your MCP server to a URL like: `mcp-server-gravatar-remote.<your-account>.workers.dev/sse`
-
-Alternatively, you can clone and deploy locally:
-
-```bash
-git clone https://github.com/Automattic/mcp-server-gravatar-remote.git
-cd mcp-server-gravatar-remote
-npm install
-npm run deploy
-```
+A remote Model Context Protocol (MCP) server that provides global access to Gravatar avatars, profiles, and AI-inferred interests.
 
 ## Tools
 
@@ -91,14 +74,6 @@ This server provides 6 comprehensive tools for accessing Gravatar data:
 
 ## Setup
 
-### Connect to Cloudflare AI Playground
-
-You can connect to your deployed MCP server from the Cloudflare AI Playground:
-
-1. Go to https://playground.ai.cloudflare.com/
-2. Enter your deployed MCP server URL (`mcp-server-gravatar-remote.<your-account>.workers.dev/sse`)
-3. You can now use your MCP tools directly from the playground!
-
 ### Connect Claude Desktop to your Remote MCP Server
 
 #### Native App Integrations
@@ -106,7 +81,7 @@ If your Claude Desktop app and account support adding integrations, you can add 
 
 1. Add a new integration
 2. Enter a name for your server
-3. Enter the URL of your remote MCP server (`https://mcp-server-gravatar-remote.<your-account>.workers.dev/sse`)
+3. Enter the URL of your remote MCP server (`https://your-domain.com/mcp`)
 
 #### Using mcp-remote Proxy
 If your environment doesn't support that, you can connect to your remote MCP server from Claude Desktop using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote).
@@ -122,7 +97,7 @@ Update with this configuration:
       "command": "npx",
       "args": [
         "mcp-remote",
-        "https://mcp-server-gravatar-remote.<your-account>.workers.dev/sse"
+        "https://your-domain.com/mcp"
       ]
     }
   }
@@ -138,7 +113,7 @@ For local development, use:
       "command": "npx",
       "args": [
         "mcp-remote",
-        "http://localhost:8787/sse"
+        "http://localhost:8787/mcp"
       ]
     }
   }
@@ -163,7 +138,7 @@ For VS Code with MCP support, add the following to your User Settings (JSON) fil
         "command": "npx",
         "args": [
           "mcp-remote",
-          "https://mcp-server-gravatar-remote.<your-account>.workers.dev/sse"
+          "https://your-domain.com/mcp"
         ]
       }
     }
@@ -181,7 +156,7 @@ For VS Code with MCP support, add the following to your User Settings (JSON) fil
         "command": "npx",
         "args": [
           "mcp-remote",
-          "http://localhost:8787/sse"
+          "http://localhost:8787/mcp"
         ]
       }
     }
@@ -228,192 +203,74 @@ The server works without authentication, but you can optionally configure a Grav
 
 ### For Production Deployment
 
-Set the API key as a Cloudflare Workers secret:
+Set the API key as an environment variable:
 
 ```bash
-npx wrangler secret put GRAVATAR_API_KEY
+export GRAVATAR_API_KEY=your-api-key-here
 ```
-
-When prompted, enter your Gravatar API key. The key will be securely stored and automatically used by the deployed server.
 
 ### For Local Development
 
-Create a `.dev.vars` file in the project root:
+Create a `.env` file in the project root:
 
 ```bash
-# .dev.vars
+# .env
 GRAVATAR_API_KEY=your-api-key-here
 ```
 
 This file is automatically loaded during local development and should not be committed to version control (it's already in `.gitignore`).
 
+## Environment Variables
+
+Configure these environment variables depending on your needs:
+
+```bash
+# Required for remote access
+MCP_TRANSPORT=http
+
+# Server configuration
+HOST=0.0.0.0               # Listen on all interfaces
+PORT=8787                  # Default port (or use PORT from hosting provider)
+
+# Security settings (recommended for production)
+ENABLE_DNS_REBINDING_PROTECTION=true
+ALLOWED_HOSTS=your-domain.com,www.your-domain.com
+ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com
+
+# Optional Gravatar API key for enhanced features
+GRAVATAR_API_KEY=your-api-key-here
+
+# Debug output (disable in production)
+DEBUG=false
+```
+
 ## Development
 
 ### Local Development
 
-Start the development server in STDIO mode (default):
+Start the development server for testing:
 
 ```bash
-npm run dev
-```
+# Install dependencies
+npm install
 
-Or start in HTTP mode:
-
-```bash
+# Start in HTTP mode for remote access
 npm run dev:http
+
+# Or start in STDIO mode for local testing
+npm run dev
 ```
 
 This will start the HTTP server at `http://localhost:8787` with hot reloading enabled.
 
-### Transport Modes
-
-This server supports two transport modes:
-
-- **STDIO Mode (Default)**: Standard MCP transport using stdin/stdout. Works with all standard MCP clients and is the recommended mode for local development.
-- **HTTP Mode**: StreamableHTTP transport for remote MCP clients. Useful for web-based clients or when you need to access the server over a network.
-
-### HTTP Server Mode
-
-To run the server in HTTP mode for remote MCP clients:
-
-#### Starting the HTTP Server
-
-```bash
-# Development with hot reloading
-npm run dev:http
-
-# Production (built)
-npm run start:http
-```
-
-#### HTTP Endpoints
-
-- **MCP Endpoint**: `http://localhost:8787/mcp` - StreamableHTTP transport for MCP clients
-- **Health Check**: `http://localhost:8787/health` - Simple health check endpoint
-
-#### Environment Configuration
-
-Create a `.env` file to configure the HTTP server:
-
-```bash
-# Transport mode
-MCP_TRANSPORT=http
-
-# Server configuration
-HOST=127.0.0.1         # Use 0.0.0.0 for external access
-PORT=8787               # Default port
-
-# Security (especially important for development)
-ENABLE_DNS_REBINDING_PROTECTION=true
-ALLOWED_HOSTS=localhost:8787,127.0.0.1:8787
-ALLOWED_ORIGINS=http://localhost:8787,http://127.0.0.1:8787
-
-# Debug output
-DEBUG=true
-```
-
-#### Security Note
-
-DNS rebinding protection is especially important for developers since local development environments are more vulnerable to attacks. However, there's currently a bug with MCP Inspector that prevents it from working with rebinding protection enabled, as it doesn't include the required `Origin` header. 
-
-**For MCP Inspector usage**: Temporarily disable rebinding protection by commenting out `ENABLE_DNS_REBINDING_PROTECTION=true` in your `.env` file.
-
-#### Connecting MCP Clients
-
-**Claude Desktop:**
-Claude Desktop requires HTTPS for remote MCP servers, which local development doesn't support. Use the mcp-remote proxy instead:
-
-```json
-{
-  "mcpServers": {
-    "gravatar": {
-      "command": "npx",
-      "args": ["mcp-remote", "http://localhost:8787/mcp"]
-    }
-  }
-}
-```
-
-**Other MCP Clients (Direct StreamableHTTP):**
-- URL: `http://localhost:8787/mcp`
-- Transport: `streamable-http`
-
-### Available Scripts
-
-- `npm run dev` - Start development server in STDIO mode (standard MCP)
-- `npm run dev:http` - Start development server in HTTP mode
-- `npm run start` - Start built server in STDIO mode
-- `npm run start:http` - Start built server in HTTP mode
-- `npm run build` - Build TypeScript to JavaScript
-- `npm run type-check` - Run TypeScript type checking
-- `npm run lint` - Run code linting
-- `npm run lint:fix` - Run linting with auto-fix
-- `npm run format` - Format code with Biome
-
-### MCP Inspector (Testing)
-
-- `npm run inspector` - Launch MCP Inspector with STDIO transport
-- `npm run inspector:http` - Launch MCP Inspector with HTTP transport
-
-#### Inspector Usage: STDIO
-```bash
-# Terminal 1: Start STDIO server
-npm run dev
-
-# Terminal 2: Launch inspector
-npm run inspector
-```
-
-#### Inspector Usage: StreamableHTTP
-```bash
-# Terminal 1: Start HTTP server
-npm run dev:http
-
-# Terminal 2: Launch inspector
-npm run inspector:http
-```
-
-**Manual Configuration (First Time Setup):**
-
-The inspector web interface remembers your settings. Configure once:
-
-**STDIO Mode (`npm run inspector`):**
-1. In the web interface, set:
-   - Transport: `stdio` (default)
-   - Command: `tsx`
-   - Arguments: `--env-file=.env src/index.ts`
-2. Click "Connect" - settings will be saved for future use
-
-**HTTP Mode (`npm run inspector:http`):**
-1. In the web interface, set:
-   - Transport: `streamable-http`
-   - URL: `http://localhost:8787/mcp`
-2. Click "Connect" - settings will be saved for future use
-
-### Building from Source
-
-If you want to build and run the MCP server from local source files:
-
-```bash
-# Clone the repository
-git clone https://github.com/Automattic/mcp-server-gravatar-remote.git
-cd mcp-server-gravatar-remote
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
 ### Architecture
 
-This remote MCP server is built on Cloudflare Workers and uses:
+This remote MCP server is built with Node.js and Express.js and features:
 
 - **OpenAPI Generated Client**: TypeScript client generated from Gravatar's OpenAPI specification for profile and interests endpoints
 - **Direct HTTP Calls**: Native fetch() for avatar image retrieval with proper MIME type detection
-- **Edge Deployment**: Global distribution via Cloudflare's edge network for low-latency access
-- **SSE Support**: Server-Sent Events for real-time MCP communication
+- **Remote Access**: StreamableHTTP transport for MCP communication over the network
+- **Global Deployment**: Deploy to any Node.js hosting platform for worldwide access
 - **No API Key Required**: Simplified deployment without authentication requirements
 
 ### Schema Generation
@@ -429,29 +286,28 @@ This generates Zod schemas from the OpenAPI spec for input validation and output
 
 ## Technical Details
 
-### Cloudflare Workers Environment
+### Remote MCP Server Environment
 
-This server is optimized for Cloudflare Workers with:
+This server is optimized for remote deployment with:
 
-- **Web Crypto API**: SHA256 hashing using `crypto.subtle.digest()`
-- **Native Fetch**: Built-in fetch() for HTTP requests
-- **ArrayBuffer Processing**: Efficient image handling
-- **Edge Caching**: Automatic caching of static responses
-- **Global Distribution**: Sub-100ms response times worldwide
+- **Node.js Runtime**: Express.js HTTP server for reliable network access
+- **StreamableHTTP Transport**: Modern MCP transport for remote clients
+- **Environment Configuration**: Flexible deployment options via environment variables
+- **Security Features**: DNS rebinding protection and CORS configuration
+- **Global Distribution**: Deploy anywhere Node.js is supported
 
 ### Rate Limiting
 
-The server operates without API key authentication, which means:
+The server operates without API key authentication by default, which means:
 
 - Standard Gravatar API rate limits apply
-- All requests appear from Cloudflare's IP addresses
+- All requests appear from your server's IP address
 - Consider implementing client-side rate limiting for high-volume usage
 
 ## Requirements
 
-- **Node.js**: 20.0.0 or higher (for development)
-- **npm**: 10.0.0 or higher (for development)
-- **Cloudflare Account**: For deployment (free tier supported)
+- **Node.js**: 22.0.0 or higher
+- **npm**: 10.0.0 or higher
 
 ## License
 
@@ -459,6 +315,6 @@ This remote MCP server is licensed under the Mozilla Public License Version 2.0 
 
 ## Related Projects
 
-- [STDIO Gravatar MCP Server](https://github.com/Automattic/mcp-server-gravatar) - The original Node.js-based version
+- [STDIO Gravatar MCP Server](https://github.com/Automattic/mcp-server-gravatar) - The original local Node.js version
 - [Gravatar API Documentation](https://docs.gravatar.com) - Official Gravatar API documentation
 - [Model Context Protocol](https://modelcontextprotocol.io) - Learn more about MCP

@@ -17,8 +17,7 @@
       "!openapi.json",
       "!openapitools.json",
       "!memory-bank/**",
-      "!tsconfig.json",
-      "!wrangler.jsonc"
+      "!tsconfig.json"
     ]
   },
   "formatter": {
