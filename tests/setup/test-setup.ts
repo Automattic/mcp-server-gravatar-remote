@@ -1,8 +1,8 @@
 import { beforeAll, afterAll, afterEach, vi } from "vitest";
 
-// Global test setup for Cloudflare Workers environment
+// Global test setup for Node.js environment
 beforeAll(() => {
-  // Setup global mocks for Workers environment
+  // Setup global mocks for Node.js environment
   // Mock crypto.subtle.digest for SHA256 hashing tests
   vi.stubGlobal("crypto", {
     subtle: {
