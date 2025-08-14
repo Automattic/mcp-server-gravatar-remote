@@ -4,6 +4,8 @@
 
 A remote Model Context Protocol (MCP) server that provides global access to Gravatar avatars, profiles, and AI-inferred interests.
 
+Official instance can be found at: https://mcp.gravatar.com. See [Setup](#setup) for instructions on connecting to this server.
+
 ## Tools
 
 This server provides 6 comprehensive tools for accessing Gravatar data:
@@ -74,14 +76,16 @@ This server provides 6 comprehensive tools for accessing Gravatar data:
 
 ## Setup
 
-### Connect Claude Desktop to your Remote MCP Server
+### Connect Claude Desktop to the Remote MCP Server
+
+Here you have multiple options to connect to Gravatar's remote MCP server. You can use the official Gravatar MCP server at `https://mcp.gravatar.com/mcp` or your own instance (`http://localhost:8787/mcp` for local development).
 
 #### Native App Integrations
 If your Claude Desktop app and account support adding integrations, you can add a remote server directly to Claude Desktop:
 
 1. Add a new integration
 2. Enter a name for your server
-3. Enter the URL of your remote MCP server (`https://your-domain.com/mcp`)
+3. Enter the URL of your remote MCP server (`https://mcp.gravatar.com/mcp`)
 
 #### Using mcp-remote Proxy
 If your environment doesn't support that, you can connect to your remote MCP server from Claude Desktop using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote).
@@ -97,7 +101,7 @@ Update with this configuration:
       "command": "npx",
       "args": [
         "mcp-remote",
-        "https://your-domain.com/mcp"
+        "https://mcp.gravatar.com/mcp"
       ]
     }
   }
@@ -138,7 +142,7 @@ For VS Code with MCP support, add the following to your User Settings (JSON) fil
         "command": "npx",
         "args": [
           "mcp-remote",
-          "https://your-domain.com/mcp"
+          "https://mcp.gravatar.com/mcp"
         ]
       }
     }
