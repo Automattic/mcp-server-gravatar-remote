@@ -66,6 +66,11 @@ export const createHttpTransport = (server: McpServer) => {
   const defaultHosts = isDevelopment ? ["localhost:8787", "127.0.0.1:8787"] : [];
   const defaultOrigins = isDevelopment ? ["http://localhost:8787", "http://127.0.0.1:8787"] : [];
 
+  // Home route redirect
+  app.get("/", (_req, res) => {
+    res.redirect("https://github.com/Automattic/mcp-server-gravatar-remote");
+  });
+
   // Health check endpoint
   app.get("/health", (_req, res) => {
     const serverInfo = getServerInfo();
