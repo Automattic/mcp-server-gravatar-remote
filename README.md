@@ -4,7 +4,7 @@
 
 A remote Model Context Protocol (MCP) server that provides global access to Gravatar avatars, profiles, and AI-inferred interests.
 
-Official instance can be found at: https://mcp.gravatar.com. See [Setup](#setup) for instructions on connecting to this server.
+See [Setup](#setup) for instructions on connecting to this server.
 
 ## Tools
 
@@ -78,14 +78,14 @@ This server provides 6 comprehensive tools for accessing Gravatar data:
 
 ### Connect Claude Desktop to the Remote MCP Server
 
-Here you have multiple options to connect to Gravatar's remote MCP server. You can use the official Gravatar MCP server at `https://mcp.gravatar.com/mcp` or your own instance (`http://localhost:8787/mcp` for local development).
+Here you have multiple options to connect to Gravatar's remote MCP server. You should use your own instance (`http://localhost:8787/mcp` for local development).
 
 #### Native App Integrations
 If your Claude Desktop app and account support adding integrations, you can add a remote server directly to Claude Desktop:
 
 1. Add a new integration
 2. Enter a name for your server
-3. Enter the URL of your remote MCP server (`https://mcp.gravatar.com/mcp`)
+3. Enter the URL of your remote MCP server (`http://localhost:8787/mcp`)
 
 #### Using mcp-remote Proxy
 If your environment doesn't support that, you can connect to your remote MCP server from Claude Desktop using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote).
@@ -93,22 +93,6 @@ If your environment doesn't support that, you can connect to your remote MCP ser
 Follow [Anthropic's Quickstart](https://modelcontextprotocol.io/quickstart/user) and within Claude Desktop go to Settings > Developer > Edit Config.
 
 Update with this configuration:
-
-```json
-{
-  "mcpServers": {
-    "gravatar": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://mcp.gravatar.com/mcp"
-      ]
-    }
-  }
-}
-```
-
-For local development, use:
 
 ```json
 {
@@ -132,25 +116,7 @@ For VS Code with support for Remote MCP Servers, add your server by pressing `Cm
 #### Using mcp-remote Proxy
 For VS Code with MCP support, add the following to your User Settings (JSON) file. Press `Cmd + Shift + P` (or `Ctrl + Shift + P` on Windows/Linux) and type `Preferences: Open Settings (JSON)`.
 
-#### Production Deployment
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "gravatar": {
-        "command": "npx",
-        "args": [
-          "mcp-remote",
-          "https://mcp.gravatar.com/mcp"
-        ]
-      }
-    }
-  }
-}
-```
-
-#### Local Development
+#### Deployment
 
 ```json
 {
